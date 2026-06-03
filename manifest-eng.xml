@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
+    <!--
+      "verses" watch face (ENGLISH build). Distinct app id from the Korean build
+      so BOTH can be resident on one watch and listed separately in the store.
+      Build with: monkeyc -f eng.jungle  (needs resources-eng/ content first).
+      Target: vivoactive4/4s (watchFace budget: 512 KB).
+    -->
+    <iq:application
+        entry="VersesFaceApp"
+        id="3f4362d960df42419ab01640cdf6788c"
+        launcherIcon="@Drawables.LauncherIcon"
+        minApiLevel="3.2.0"
+        name="@Strings.AppName"
+        type="watchface"
+        version="1.0.0">
+        <iq:products>
+            <iq:product id="vivoactive4"/>
+            <iq:product id="vivoactive4s"/>
+        </iq:products>
+        <iq:permissions/>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+    </iq:application>
+</iq:manifest>

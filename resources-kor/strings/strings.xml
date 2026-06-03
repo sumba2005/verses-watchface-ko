@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string id="AppName">말씀</string>
+
+    <!-- Settings labels (rendered by Garmin Connect Mobile, not the watch font). -->
+    <string id="SetTimeFormat">24시간 형식</string>
+    <string id="SetShowBattery">배터리 표시</string>
+    <string id="SetAccent">강조 색상</string>
+    <string id="SetInterval">구절 변경 주기</string>
+
+    <string id="ColorBlue">파랑</string>
+    <string id="ColorWhite">흰색</string>
+    <string id="ColorGreen">초록</string>
+    <string id="ColorAmber">주황</string>
+
+    <string id="IntervalDaily">매일</string>
+    <string id="IntervalHourly">매시간</string>
+    <string id="IntervalFixed">고정</string>
+</resources>

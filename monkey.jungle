@@ -1,0 +1,11 @@
+# KOREAN build (default). `monkeyc -f monkey.jungle ...` builds the Korean face.
+#
+# Per-language builds keep each binary lean: only this language's verses.json
+# and glyph-subset font ship. The device qualifier is auto-appended to every
+# resourcePath entry, so the 4S font override lives in resources-kor-vivoactive4s/.
+#
+# Shared (resources/): launcher icon + phone-app settings (settings.xml /
+# properties.xml). Language-specific (resources-kor/): verses, font, strings.
+
+project.manifest = manifest-kor.xml
+base.resourcePath = resources;resources-kor

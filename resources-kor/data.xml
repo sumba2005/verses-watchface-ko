@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- All 48 verses (~6 KB). Loaded on demand; only one verse is ever rendered. -->
+    <jsonData id="Verses" filename="data/verses.json"/>
+</resources>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
+    <!--
+      "verses" watch face (KOREAN build). Time, a rotating Korean verse, and
+      its reference. Build with: monkeyc -f monkey.jungle (== Korean).
+      Its own app id so it can coexist with the English build on one watch.
+      Target: vivoactive4/4s (watchFace budget: 512 KB).
+    -->
+    <iq:application
+        entry="VersesFaceApp"
+        id="8b37ee95a8d7434f857654a71a4c1ede"
+        launcherIcon="@Drawables.LauncherIcon"
+        minApiLevel="3.2.0"
+        name="@Strings.AppName"
+        type="watchface"
+        version="1.0.0">
+        <iq:products>
+            <iq:product id="vivoactive4"/>
+            <iq:product id="vivoactive4s"/>
+        </iq:products>
+        <iq:permissions/>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+    </iq:application>
+</iq:manifest>

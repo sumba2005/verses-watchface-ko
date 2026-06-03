@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Phone-app (Garmin Connect Mobile) settings UI. Titles/labels resolve from the
+  per-language strings.xml, so a Korean build shows Korean labels and an English
+  build shows English labels (the phone renders these with system fonts, so they
+  are independent of our embedded verse font).
+-->
+<settings>
+    <setting propertyKey="@Properties.Use24Hour" title="@Strings.SetTimeFormat">
+        <settingConfig type="boolean" />
+    </setting>
+
+    <setting propertyKey="@Properties.ShowBattery" title="@Strings.SetShowBattery">
+        <settingConfig type="boolean" />
+    </setting>
+
+    <setting propertyKey="@Properties.AccentColor" title="@Strings.SetAccent">
+        <settingConfig type="list">
+            <listEntry value="5614079">@Strings.ColorBlue</listEntry>
+            <listEntry value="16777215">@Strings.ColorWhite</listEntry>
+            <listEntry value="5635925">@Strings.ColorGreen</listEntry>
+            <listEntry value="16746496">@Strings.ColorAmber</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.VerseInterval" title="@Strings.SetInterval">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.IntervalDaily</listEntry>
+            <listEntry value="1">@Strings.IntervalHourly</listEntry>
+            <listEntry value="2">@Strings.IntervalFixed</listEntry>
+        </settingConfig>
+    </setting>
+</settings>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string id="AppName">Verses</string>
+
+    <!-- Settings labels (rendered by Garmin Connect Mobile, not the watch font). -->
+    <string id="SetTimeFormat">24-hour clock</string>
+    <string id="SetShowBattery">Show battery</string>
+    <string id="SetAccent">Accent color</string>
+    <string id="SetInterval">Verse changes</string>
+
+    <string id="ColorBlue">Blue</string>
+    <string id="ColorWhite">White</string>
+    <string id="ColorGreen">Green</string>
+    <string id="ColorAmber">Amber</string>
+
+    <string id="IntervalDaily">Daily</string>
+    <string id="IntervalHourly">Hourly</string>
+    <string id="IntervalFixed">Fixed</string>
+</resources>
