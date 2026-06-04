@@ -31,7 +31,7 @@ class VersesFaceView extends WatchUi.WatchFace {
     }
 
     function onLayout(dc) {
-        _font = WatchUi.loadResource(Rez.Fonts.VerseFont);
+        _font = Graphics.FONT_SMALL;
     }
 
     function onUpdate(dc) {
@@ -80,13 +80,17 @@ class VersesFaceView extends WatchUi.WatchFace {
         // --- Verse (lower half) ---
         if (_needWrap) {
             var maxW = w - (2 * (w * H_INSET_RATIO).toNumber());
-            _lines = wrap(dc, _verse, _font, maxW);
+            if (_verse.length() > 50) {
+                _lines = wrapCharacter(dc, _verse, _font, maxW);
+            } else {
+                _lines = wrapWords(dc, _verse, _font, maxW);
+            }
             _needWrap = false;
         }
         var lineH = dc.getFontHeight(_font) + LINE_GAP;
         var bodyH = _lines.size() * lineH;
-        var regionTop = (h * 0.22).toNumber();
-        var regionBot = (h * 0.80).toNumber();
+        var regionTop = (h * 0.18).toNumber();
+        var regionBot = (h * 0.84).toNumber();
         var y = regionTop + (((regionBot - regionTop) - bodyH) / 2);
         if (y < regionTop) { y = regionTop; }
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -172,8 +176,8 @@ class VersesFaceView extends WatchUi.WatchFace {
         _verse = entry["t"];
     }
 
-    // Greedy space-based wrap with char-level fallback (runs only on day change).
-    private function wrap(dc, text, font, maxW) {
+    // Word-based wrapping with space breaks (for shorter verses).
+    private function wrapWords(dc, text, font, maxW) {
         var lines = [];
         var words = splitSpaces(text);
         var cur = "";
@@ -184,22 +188,25 @@ class VersesFaceView extends WatchUi.WatchFace {
                 cur = test;
             } else {
                 if (cur.length() > 0) { lines.add(cur); cur = ""; }
-                if (dc.getTextWidthInPixels(word, font) > maxW) {
-                    var chunk = "";
-                    for (var c = 0; c < word.length(); c++) {
-                        var ch = word.substring(c, c + 1);
-                        var t2 = chunk + ch;
-                        if (dc.getTextWidthInPixels(t2, font) <= maxW) {
-                            chunk = t2;
-                        } else {
-                            if (chunk.length() > 0) { lines.add(chunk); }
-                            chunk = ch;
-                        }
-                    }
-                    cur = chunk;
-                } else {
-                    cur = word;
-                }
+                cur = word;
+            }
+        }
+        if (cur.length() > 0) { lines.add(cur); }
+        return lines;
+    }
+
+    // Character-level wrapping for maximum line usage (for longer verses >50 chars).
+    private function wrapCharacter(dc, text, font, maxW) {
+        var lines = [];
+        var cur = "";
+        for (var i = 0; i < text.length(); i++) {
+            var ch = text.substring(i, i + 1);
+            var test = cur + ch;
+            if (dc.getTextWidthInPixels(test, font) <= maxW) {
+                cur = test;
+            } else {
+                if (cur.length() > 0) { lines.add(cur); }
+                cur = ch;
             }
         }
         if (cur.length() > 0) { lines.add(cur); }
@@ -220,4 +227,5 @@ class VersesFaceView extends WatchUi.WatchFace {
         if (cur.length() > 0) { out.add(cur); }
         return out;
     }
+
 }
