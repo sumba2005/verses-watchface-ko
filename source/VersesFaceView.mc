@@ -4,7 +4,6 @@ using Toybox.System;
 using Toybox.Time;
 using Toybox.Math;
 using Toybox.Application;
-using Toybox.ActivityMonitor;
 
 // Verses watch face: 12-hour time (top), Korean verse (middle), reference curved
 // along the bottom arc. The verse changes hourly.
@@ -26,8 +25,6 @@ class VersesFaceView extends WatchUi.WatchFace {
     private var _lines = [];
     private var _needWrap = false;
     private var _interval = 1;              // tracks VerseInterval to invalidate the cache on change
-    private var _heartRate = "--";
-    private var _steps = "--";
 
     function initialize() {
         WatchFace.initialize();
@@ -109,16 +106,6 @@ class VersesFaceView extends WatchUi.WatchFace {
             dc.setColor(batt <= 15 ? 0xFF5555 : Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             drawVerticalText(dc, (w * 0.07).toNumber(), h / 2, Graphics.FONT_XTINY, battStr);
         }
-
-        // --- HR and steps, displayed horizontally below the verse ---
-        updateHeartRateAndSteps();
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        var metricsY = (h * 0.82).toNumber();
-        var hrText = _heartRate + " bpm";
-        var stepsText = _steps + " steps";
-        var spacing = 20;
-        dc.drawText(w / 2 - spacing, metricsY, Graphics.FONT_SMALL, hrText, Graphics.TEXT_JUSTIFY_RIGHT);
-        dc.drawText(w / 2 + spacing, metricsY, Graphics.FONT_SMALL, stepsText, Graphics.TEXT_JUSTIFY_LEFT);
     }
 
     // Read an Application property, falling back to def if unset/null.
@@ -141,26 +128,7 @@ class VersesFaceView extends WatchUi.WatchFace {
     }
 
 
-    // Fetch current HR and steps, cache in _heartRate and _steps.
-    private function updateHeartRateAndSteps() {
-        // Heart rate: API not available in vivoactive4s; show placeholder
-        _heartRate = "--";
-
-        // Steps: read from ActivityMonitor
-        var actInfo = ActivityMonitor.getInfo();
-        if (actInfo != null && actInfo.steps != null) {
-            var stepCount = actInfo.steps;
-            if (stepCount >= 1000) {
-                _steps = (stepCount / 1000).format("%.1f") + "k";
-            } else {
-                _steps = stepCount.format("%d");
-            }
-        } else {
-            _steps = "--";
-        }
-    }
-
-    // Draw text along an arc. top=true centers it at 12 o'clock (text reads left to
+// Draw text along an arc. top=true centers it at 12 o'clock (text reads left to
     // right across the top rim); top=false centers it at 6 o'clock along the bottom.
     // The 4S has no text rotation API, so glyphs stay upright; only their position
     // follows the curve.
