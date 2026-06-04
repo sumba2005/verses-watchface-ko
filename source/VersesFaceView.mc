@@ -14,7 +14,7 @@ using Toybox.ActivityMonitor;
 // + the cached verse lines. No seconds, so no onPartialUpdate.
 class VersesFaceView extends WatchUi.WatchFace {
 
-    private const VERSE_COUNT = 48;
+    private const VERSE_COUNT = 241;
     private const H_INSET_RATIO = 0.14;
     private const LINE_GAP = 1;
     private const DEBUG_INDEX = -1;        // -1 = daily verse; >=0 forces a fixed verse (testing)
@@ -88,8 +88,8 @@ class VersesFaceView extends WatchUi.WatchFace {
         }
         var lineH = dc.getFontHeight(_font) + LINE_GAP;
         var bodyH = _lines.size() * lineH;
-        var regionTop = (h * 0.24).toNumber();
-        var regionBot = (h * 0.70).toNumber();
+        var regionTop = (h * 0.22).toNumber();
+        var regionBot = (h * 0.80).toNumber();
         var y = regionTop + (((regionBot - regionTop) - bodyH) / 2);
         if (y < regionTop) { y = regionTop; }
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -110,10 +110,15 @@ class VersesFaceView extends WatchUi.WatchFace {
             drawVerticalText(dc, (w * 0.07).toNumber(), h / 2, Graphics.FONT_XTINY, battStr);
         }
 
-        // --- HR and steps, stacked vertically at the 3 o'clock rim edge ---
+        // --- HR and steps, displayed horizontally below the verse ---
         updateHeartRateAndSteps();
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        drawVerticalMetrics(dc, (w * 0.93).toNumber(), h / 2, Graphics.FONT_XTINY, _heartRate, _steps);
+        var metricsY = (h * 0.82).toNumber();
+        var hrText = _heartRate + " bpm";
+        var stepsText = _steps + " steps";
+        var spacing = 20;
+        dc.drawText(w / 2 - spacing, metricsY, Graphics.FONT_SMALL, hrText, Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.drawText(w / 2 + spacing, metricsY, Graphics.FONT_SMALL, stepsText, Graphics.TEXT_JUSTIFY_LEFT);
     }
 
     // Read an Application property, falling back to def if unset/null.
@@ -135,35 +140,10 @@ class VersesFaceView extends WatchUi.WatchFace {
         }
     }
 
-    // Draw two metrics (HR and steps) stacked vertically at the 3 o'clock rim.
-    // Centered on cy, separated by spacing.
-    private function drawVerticalMetrics(dc, x, cy, font, hrStr, stepsStr) {
-        var ch = dc.getFontHeight(font);
-        var spacing = 4;
-        var totalH = (hrStr.length() + stepsStr.length()) * ch + spacing;
-        var y = cy - (totalH / 2) + (ch / 2);
-
-        // Draw HR (top)
-        for (var i = 0; i < hrStr.length(); i++) {
-            dc.drawText(x, y, font, hrStr.substring(i, i + 1),
-                        Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            y += ch;
-        }
-
-        // Spacing between metrics
-        y += spacing;
-
-        // Draw steps (bottom)
-        for (var i = 0; i < stepsStr.length(); i++) {
-            dc.drawText(x, y, font, stepsStr.substring(i, i + 1),
-                        Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            y += ch;
-        }
-    }
 
     // Fetch current HR and steps, cache in _heartRate and _steps.
     private function updateHeartRateAndSteps() {
-        // Heart rate: not directly available in API 3.2.0, show placeholder
+        // Heart rate: API not available in vivoactive4s; show placeholder
         _heartRate = "--";
 
         // Steps: read from ActivityMonitor
