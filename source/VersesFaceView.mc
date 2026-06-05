@@ -53,7 +53,7 @@ class VersesFaceView extends WatchUi.WatchFace {
     }
 
     function onLayout(dc) {
-        _font = Graphics.FONT_MEDIUM;
+        _font = Graphics.FONT_LARGE;
     }
 
     function onTap(clickEvent) {
