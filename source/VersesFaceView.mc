@@ -54,7 +54,20 @@ class VersesFaceView extends WatchUi.WatchFace {
 
     function onLayout(dc) {
         _font = Graphics.FONT_SMALL;
-        WatchUi.setInputDelegate(new VerseInputDelegate(self));
+    }
+
+    function onTap(clickEvent) {
+        return handleTap(clickEvent);
+    }
+
+    private function handleTap(clickEvent) {
+        if (!_inPagination) {
+            enterPaginationMode();
+        } else {
+            nextPage();
+        }
+        WatchUi.requestUpdate();
+        return true;
     }
 
     function onUpdate(dc) {
@@ -447,28 +460,6 @@ class VersesFaceView extends WatchUi.WatchFace {
         }
         if (cur.length() > 0) { out.add(cur); }
         return out;
-    }
-
-}
-
-// Input delegate for handling tap to enter/cycle pagination
-class VerseInputDelegate extends WatchUi.InputDelegate {
-
-    private var _view;
-
-    function initialize(view) {
-        InputDelegate.initialize();
-        _view = view;
-    }
-
-    function onTap(clickEvent) {
-        if (!_view.isPaginating()) {
-            _view.enterPaginationMode();
-        } else {
-            _view.nextPage();
-        }
-        WatchUi.requestUpdate();
-        return true;
     }
 
 }
