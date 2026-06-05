@@ -11,6 +11,7 @@
 <properties>
     <property id="Use24Hour"     type="boolean">false</property>
     <property id="ShowBattery"    type="boolean">true</property>
+    <property id="ShowPedometer"  type="boolean">true</property>
     <property id="AccentColor"    type="number">5614079</property>   <!-- 0x55AAFF -->
     <property id="VerseInterval"  type="number">1</property>          <!-- 0=daily 1=hourly 2=fixed -->
 </properties>
