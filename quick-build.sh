@@ -37,13 +37,23 @@ fi
 mkdir -p bin
 
 echo "Building English version..."
-monkeyc -f eng.jungle -o bin/verses-face-4s.prg -y "$KEY_PATH" -w && \
-echo "✅ English: bin/verses-face-4s.prg"
+monkeyc -f eng.jungle -d vivoactive4s -o bin/verses-face-4s.prg -y "$KEY_PATH" -w && \
+echo "✅ English Watchface: bin/verses-face-4s.prg"
+
+echo ""
+echo "Building English Widget..."
+monkeyc -f widget-eng.jungle -d vivoactive4s -o bin/verses-widget-eng.prg -y "$KEY_PATH" -w && \
+echo "✅ English Widget: bin/verses-widget-eng.prg"
 
 echo ""
 echo "Building Korean version..."
-monkeyc -f monkey.jungle -o bin/verses-kor-4s.prg -y "$KEY_PATH" -w && \
-echo "✅ Korean: bin/verses-kor-4s.prg"
+monkeyc -f monkey.jungle -d vivoactive4s -o bin/verses-kor-4s.prg -y "$KEY_PATH" -w && \
+echo "✅ Korean Watchface: bin/verses-kor-4s.prg"
+
+echo ""
+echo "Building Korean Widget..."
+monkeyc -f widget-kor.jungle -d vivoactive4s -o bin/verses-widget-kor.prg -y "$KEY_PATH" -w && \
+echo "✅ Korean Widget: bin/verses-widget-kor.prg"
 
 echo ""
 echo "=========================================="

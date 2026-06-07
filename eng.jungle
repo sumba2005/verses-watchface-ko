@@ -8,4 +8,5 @@
 # Same pattern for any future language: copy this file, swap the lang code.
 
 project.manifest = manifest-eng.xml
-base.resourcePath = resources;resources-eng
+base.sourcePath = source/VersesFaceApp.mc;source/VersesFaceView.mc
+base.resourcePath = resources;resources_eng

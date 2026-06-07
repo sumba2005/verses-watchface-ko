@@ -24,7 +24,7 @@ mkdir -p bin
 
 # Build English version
 echo "Building English version (verses-face-4s.prg)..."
-$MONKEYC -f eng.jungle -o bin/verses-face-4s.prg -l || {
+$MONKEYC -f eng.jungle -d vivoactive4s -o bin/verses-face-4s.prg -l || {
     echo "Build failed. Check for errors above."
     exit 1
 }
@@ -34,7 +34,7 @@ echo ""
 
 # Build Korean version
 echo "Building Korean version (verses-kor-4s.prg)..."
-$MONKEYC -f monkey.jungle -o bin/verses-kor-4s.prg -l || {
+$MONKEYC -f monkey.jungle -d vivoactive4s -o bin/verses-kor-4s.prg -l || {
     echo "Build failed. Check for errors above."
     exit 1
 }

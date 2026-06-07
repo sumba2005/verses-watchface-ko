@@ -108,9 +108,35 @@ class VerseWidgetView extends WatchUi.View {
             y += pageLineH;
         }
 
-        // Draw reference at the bottom (accent color matching default)
-        dc.setColor(0x55AAFF, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(w / 2, h - 25, _refFont, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        // Draw reference at the bottom (book name in red, chapter:verse in accent)
+        var spaceIdx = -1;
+        for (var i = _ref.length() - 1; i >= 0; i--) {
+            if (_ref.substring(i, i + 1).equals(" ")) {
+                spaceIdx = i;
+                break;
+            }
+        }
+        if (spaceIdx == -1) {
+            dc.setColor(0x55AAFF, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(w / 2, h - 25, _refFont, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        } else {
+            var bookName = _ref.substring(0, spaceIdx);
+            var chapterVerse = _ref.substring(spaceIdx + 1, _ref.length());
+            
+            var bookW = dc.getTextWidthInPixels(bookName, _refFont);
+            var spaceW = dc.getTextWidthInPixels(" ", _refFont);
+            var cvW = dc.getTextWidthInPixels(chapterVerse, _refFont);
+            var totalW = bookW + spaceW + cvW;
+            
+            var startX = (w - totalW) / 2;
+            var yY = h - 25;
+            
+            dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT); // Red
+            dc.drawText(startX + (bookW / 2), yY, _refFont, bookName, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            
+            dc.setColor(0x55AAFF, Graphics.COLOR_TRANSPARENT); // Accent (Blue)
+            dc.drawText(startX + bookW + spaceW + (cvW / 2), yY, _refFont, chapterVerse, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
     }
 
     private function drawDots(dc, w, dotY) {

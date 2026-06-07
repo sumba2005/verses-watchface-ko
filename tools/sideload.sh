@@ -13,16 +13,20 @@ set -euo pipefail
 PROJ="$(cd "$(dirname "$0")/.." && pwd)"
 LANG="${1:-kor}"
 case "$LANG" in
-    kor) APPNAME="VERSESWF.PRG" ;;
-    eng) APPNAME="VERSESEN.PRG" ;;
-    *)   APPNAME="VERSES${LANG^^}.PRG" ;;
+    kor) APPNAME="VERSESWF.PRG"; WIDGETNAME="VERSEWKR.PRG" ;;
+    eng) APPNAME="VERSESEN.PRG"; WIDGETNAME="VERSEWEN.PRG" ;;
+    *)   APPNAME="VERSES${LANG^^}.PRG"; WIDGETNAME="VERSEW${LANG^^}.PRG" ;;
 esac
 
 pick_src() {  # $1 = model description text
+    local file_lang="$LANG"
+    if [ "$file_lang" = "eng" ]; then
+        file_lang="face"
+    fi
     if echo "$1" | grep -qi "4S"; then
-        echo "$PROJ/bin/verses-$LANG-4s.prg"
+        echo "$PROJ/bin/verses-$file_lang-4s.prg"
     else
-        echo "$PROJ/bin/verses-$LANG.prg"
+        echo "$PROJ/bin/verses-$file_lang.prg"
     fi
 }
 
@@ -36,19 +40,25 @@ for base in "/media/$USER" "/run/media/$USER" /media /mnt; do
         SRC="$(pick_src "$(cat "$XML")")"
         echo "✅ Mass-storage device: $d"
         echo "✅ Build: $(basename "$SRC")"
-        cp "$SRC" "$APPS/$APPNAME"; sync
-        echo "✅ Copied to $APPS/$APPNAME — safely eject the watch."
+        cp "$SRC" "$APPS/$APPNAME"
+        WIDGET_SRC="$PROJ/bin/verses-widget-$LANG.prg"
+        if [ -f "$WIDGET_SRC" ]; then
+            cp "$WIDGET_SRC" "$APPS/$WIDGETNAME"
+            echo "✅ Widget: $(basename "$WIDGET_SRC") -> APPS/$WIDGETNAME"
+        fi
+        sync
+        echo "✅ Sideload complete — safely eject the watch."
         exit 0
     done < <(find "$base" -maxdepth 2 -type d 2>/dev/null)
 done
 
 # ---- Path 2: MTP via gvfs/gio (vivoactive4/4s) ----
-DEV="$(gio mount -li 2>/dev/null | grep -oE 'mtp://[^ ]*Garmin[^ ]*' | head -1)"
-[ -z "$DEV" ] && DEV="$(mount 2>/dev/null | grep -oE 'mtp:host=091e_[0-9a-f_]+' | head -1)"
+DEV="$(gio mount -li 2>/dev/null | grep -oE 'mtp://[^ ]*Garmin[^ ]*' | head -1 || true)"
+[ -z "$DEV" ] && DEV="$(mount 2>/dev/null | grep -oE 'mtp:host=091e_[0-9a-f_]+' | head -1 || true)"
 [ -n "$DEV" ] && [[ "$DEV" != mtp://* ]] && DEV="mtp://${DEV#mtp:host=}"
 # Fallback: scan gvfs dir for a Garmin MTP host (vendor id 091e).
 if [ -z "$DEV" ]; then
-    host="$(ls "/run/user/$(id -u)/gvfs" 2>/dev/null | grep -oE 'mtp:host=091e_[0-9a-f_]+' | head -1)"
+    host="$(ls "/run/user/$(id -u)/gvfs" 2>/dev/null | grep -oE 'mtp:host=091e_[0-9a-f_]+' | head -1 || true)"
     [ -n "$host" ] && DEV="mtp://${host#mtp:host=}"
 fi
 
@@ -67,4 +77,13 @@ DEST="$DEV/Primary/GARMIN/APPS/$APPNAME"
 gio remove "$DEST" 2>/dev/null || true   # MTP needs delete-before-overwrite
 gio copy "$SRC" "$DEST"
 echo "✅ Installed $(stat -c%s "$SRC") bytes to APPS/$APPNAME."
-echo "   Unplug the watch — it installs the new face on disconnect."
+
+WIDGET_SRC="$PROJ/bin/verses-widget-$LANG.prg"
+if [ -f "$WIDGET_SRC" ]; then
+    WIDGET_DEST="$DEV/Primary/GARMIN/APPS/$WIDGETNAME"
+    gio remove "$WIDGET_DEST" 2>/dev/null || true
+    gio copy "$WIDGET_SRC" "$WIDGET_DEST"
+    echo "✅ Installed $(stat -c%s "$WIDGET_SRC") bytes to APPS/$WIDGETNAME."
+fi
+
+echo "   Unplug the watch — it installs the new apps on disconnect."

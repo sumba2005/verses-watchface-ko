@@ -8,4 +8,5 @@
 # properties.xml). Language-specific (resources-kor/): verses, font, strings.
 
 project.manifest = manifest-kor.xml
-base.resourcePath = resources;resources-kor
+base.sourcePath = source/VersesFaceApp.mc;source/VersesFaceView.mc
+base.resourcePath = resources;resources_kor
