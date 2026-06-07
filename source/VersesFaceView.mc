@@ -407,7 +407,7 @@ class VersesFaceView extends WatchUi.WatchFace {
         }
 
         var bookName = text.substring(0, spaceIdx);
-        var chapterVerse = text.substring(spaceIdx + 1);
+        var chapterVerse = text.substring(spaceIdx + 1, text.length());
 
         // Calculate total width
         var totalW = 0.0;
