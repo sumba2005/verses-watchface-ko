@@ -56,7 +56,7 @@ def main():
                 continue
             book, ch, vn, text = row[0].strip(), row[1].strip(), row[2].strip(), row[3].strip()
             
-            if LANG == "kor" and len(book) >= 4 and book in KOREAN_BOOK_ABBREVIATIONS:
+            if len(book) >= 4 and book in KOREAN_BOOK_ABBREVIATIONS:
                 book = KOREAN_BOOK_ABBREVIATIONS[book]
                 
             if book not in book_to_idx:
