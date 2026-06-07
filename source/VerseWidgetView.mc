@@ -117,7 +117,7 @@ class VerseWidgetView extends WatchUi.View {
             }
         }
         if (spaceIdx == -1) {
-            dc.setColor(0x55AAFF, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT);
             dc.drawText(w / 2, h - 25, _refFont, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         } else {
             var bookName = _ref.substring(0, spaceIdx);
@@ -134,7 +134,7 @@ class VerseWidgetView extends WatchUi.View {
             dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT); // Red
             dc.drawText(startX + (bookW / 2), yY, _refFont, bookName, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             
-            dc.setColor(0x55AAFF, Graphics.COLOR_TRANSPARENT); // Accent (Blue)
+            dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT); // Red
             dc.drawText(startX + bookW + spaceW + (cvW / 2), yY, _refFont, chapterVerse, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }

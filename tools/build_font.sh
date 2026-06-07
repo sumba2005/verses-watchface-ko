@@ -44,9 +44,9 @@ mkdir -p "$OUT_DIR"
 
 # Determine size for reference font
 if [ "$SIZE" -eq 12 ]; then
-    REF_SIZE="${REF_SIZE:-10}"
+    REF_SIZE="${REF_SIZE:-12}"
 else
-    REF_SIZE="${REF_SIZE:-15}"
+    REF_SIZE="${REF_SIZE:-17}"
 fi
 
 echo "Building verse font (size $SIZE)..."

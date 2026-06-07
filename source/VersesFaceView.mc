@@ -265,7 +265,7 @@ class VersesFaceView extends WatchUi.WatchFace {
 
         // Reference arc with adjusted radius if needed
         var refRadius = _refRadiusAdjusted ? (h * REF_RADIUS_MIN) : (h * 0.40);
-        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, _refFont, 0xFF5555, accent);
+        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, _refFont, 0xFF5555, 0xFF5555);
 
         // Battery and pedometer
         if (showBatt) {
@@ -314,7 +314,7 @@ class VersesFaceView extends WatchUi.WatchFace {
 
         // Reference arc (adjusted radius)
         var refRadius = _refRadiusAdjusted ? (h * REF_RADIUS_MIN) : (h * 0.40);
-        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, _refFont, 0xFF5555, accent);
+        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, _refFont, 0xFF5555, 0xFF5555);
 
         // Battery and pedometer (scaled down)
         if (showBatt) {
