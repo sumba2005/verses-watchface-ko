@@ -23,7 +23,7 @@ LANG="${1:-kor}"                              # language code: matches verses-<l
 # Sensible default TTF per language; override with TTF=/path/to.ttf
 DEFAULT_TTF="tools/NotoSansKR-Regular.otf"
 TTF="${TTF:-$DEFAULT_TTF}"
-SIZE="${SIZE:-30}"                            # point size; tune so all verses fit one screen
+SIZE="${SIZE:-20}"                            # point size; tune so all verses fit one screen
 GLYPHS="tools/glyphs-$LANG.txt"
 OUT_DIR="${OUT_DIR:-resources_${LANG}/fonts}"
 OUT="$OUT_DIR/verse"
@@ -44,9 +44,9 @@ mkdir -p "$OUT_DIR"
 
 # Determine size for reference font
 if [ "$SIZE" -eq 12 ]; then
-    REF_SIZE="${REF_SIZE:-10}"
+    REF_SIZE="${REF_SIZE:-9}"
 else
-    REF_SIZE="${REF_SIZE:-20}"
+    REF_SIZE="${REF_SIZE:-14}"
 fi
 
 echo "Building verse font (size $SIZE)..."
