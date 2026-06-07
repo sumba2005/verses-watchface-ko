@@ -17,7 +17,6 @@ using Toybox.ActivityMonitor;
 // Fallback cascade: reduce reference radius → shrink region → truncate.
 class VersesFaceView extends WatchUi.WatchFace {
 
-    private const VERSE_COUNT = 232;
     private const H_INSET_RATIO = 0.14;
     private const LINE_GAP = 1;
     private const DEBUG_INDEX = -1;
@@ -26,9 +25,11 @@ class VersesFaceView extends WatchUi.WatchFace {
     private const REGION_BOT_TIGHT = 0.80; // tight region bottom for fallback
     private const MAX_TRUNCATE_LINES = 4;
     private const PAGINATION_TIMEOUT = 10000; // milliseconds
+    private const MAX_BOOK_NAME_LEN = 12;  // limit book name to stay within 7:30 rim edge
 
     private var _font;
     private var _loadedIdx = -1;
+    private var _lastPeriodId = -1;
     private var _ref = "";
     private var _verse = "";
     private var _lines = [];
@@ -53,7 +54,7 @@ class VersesFaceView extends WatchUi.WatchFace {
     }
 
     function onLayout(dc) {
-        _font = Graphics.FONT_LARGE;
+        _font = WatchUi.loadResource(Rez.Fonts.VerseFont);
     }
 
     function onTap(clickEvent) {
@@ -90,18 +91,56 @@ class VersesFaceView extends WatchUi.WatchFace {
         if (interval != _interval) {
             _interval = interval;
             _loadedIdx = -1;
+            _lastPeriodId = -1;
             _inPagination = false;
         }
 
-        var idx = verseIndex(interval);
-        if (idx != _loadedIdx) {
-            _loadedIdx = idx;
-            loadVerse(idx);
-            _needWrap = true;
-            _inPagination = false;
-            _currentPage = 0;
-            _refRadiusAdjusted = false;
-            _regionAdjusted = false;
+        var period = (interval == 0) ? 86400 : 3600;
+        var periodId = 0;
+        if (interval != 2) {
+            periodId = (Time.now().value() / period).toNumber();
+        }
+
+        if (periodId != _lastPeriodId || _loadedIdx == -1) {
+            _lastPeriodId = periodId;
+            try {
+                var data = WatchUi.loadResource(Rez.JsonData.Verses);
+                if (data != null) {
+                    var versesList = data["v"];
+                    var books = data["b"];
+                    if (versesList != null && versesList.size() > 0) {
+                        var idx = 0;
+                        if (DEBUG_INDEX >= 0) {
+                            idx = DEBUG_INDEX;
+                        } else if (interval != 2) {
+                            idx = periodId % versesList.size();
+                        }
+                        _loadedIdx = idx;
+                        var entry = versesList[idx];
+                        var bookIdx = entry[0];
+                        var ch = entry[1];
+                        var vn = entry[2];
+                        _verse = entry[3];
+                        var bookName = "";
+                        if (books != null && bookIdx >= 0 && bookIdx < books.size()) {
+                            bookName = books[bookIdx];
+                            if (bookName.length() > MAX_BOOK_NAME_LEN) {
+                                bookName = bookName.substring(0, MAX_BOOK_NAME_LEN);
+                            }
+                        }
+                        _ref = bookName + " " + ch.toString() + ":" + vn.toString();
+                        _needWrap = true;
+                        _inPagination = false;
+                        _currentPage = 0;
+                        _refRadiusAdjusted = false;
+                        _regionAdjusted = false;
+                    }
+                }
+            } catch (ex) {
+                _ref = "Error";
+                _verse = "Failed to load verse data.";
+                _needWrap = true;
+            }
         }
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
@@ -187,8 +226,8 @@ class VersesFaceView extends WatchUi.WatchFace {
     }
 
     private function calculatePaginationPages(dc) {
-        // How many lines fit per page in FONT_MEDIUM?
-        var pageLineH = dc.getFontHeight(Graphics.FONT_MEDIUM) + LINE_GAP;
+        // How many lines fit per page in the custom font?
+        var pageLineH = dc.getFontHeight(_font) + LINE_GAP;
         var regionH = ((REGION_BOT_TIGHT - REGION_TOP_TIGHT) * dc.getHeight()).toNumber();
         var linesPerPage = (regionH / pageLineH).toNumber();
         if (linesPerPage < 1) { linesPerPage = 1; }
@@ -224,8 +263,7 @@ class VersesFaceView extends WatchUi.WatchFace {
 
         // Reference arc with adjusted radius if needed
         var refRadius = _refRadiusAdjusted ? (h * REF_RADIUS_MIN) : (h * 0.40);
-        dc.setColor(accent, Graphics.COLOR_TRANSPARENT);
-        drawArcText(dc, w / 2, h / 2, refRadius, _ref, _font, false);
+        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, Graphics.FONT_XTINY, accent, 0xFF5555);
 
         // Battery and pedometer
         if (showBatt) {
@@ -250,7 +288,7 @@ class VersesFaceView extends WatchUi.WatchFace {
 
     private function drawPaginationMode(dc, w, h, accent, showBatt) {
         // Everything shrinks proportionally
-        var pageLineH = dc.getFontHeight(Graphics.FONT_MEDIUM) + LINE_GAP;
+        var pageLineH = dc.getFontHeight(_font) + LINE_GAP;
         var regionTop = (h * REGION_TOP_TIGHT).toNumber();
         var regionBot = (h * REGION_BOT_TIGHT).toNumber();
         var regionH = regionBot - regionTop;
@@ -263,7 +301,7 @@ class VersesFaceView extends WatchUi.WatchFace {
         var y = regionTop + 10;
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         for (var i = startLine; i < endLine; i++) {
-            dc.drawText(w / 2, y, Graphics.FONT_MEDIUM, _paginationLines[i], Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(w / 2, y, _font, _paginationLines[i], Graphics.TEXT_JUSTIFY_CENTER);
             y += pageLineH;
         }
 
@@ -274,8 +312,7 @@ class VersesFaceView extends WatchUi.WatchFace {
 
         // Reference arc (adjusted radius)
         var refRadius = _refRadiusAdjusted ? (h * REF_RADIUS_MIN) : (h * 0.40);
-        dc.setColor(accent, Graphics.COLOR_TRANSPARENT);
-        drawArcText(dc, w / 2, h / 2, refRadius, _ref, Graphics.FONT_XTINY, false);
+        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, Graphics.FONT_XTINY, accent, 0xFF5555);
 
         // Battery and pedometer (scaled down)
         if (showBatt) {
@@ -352,6 +389,67 @@ class VersesFaceView extends WatchUi.WatchFace {
     }
 
 
+// Draw text along an arc with two colors: book name in color1, chapter:verse in color2
+    private function drawArcTextColored(dc, cx, cy, radius, text, font, color1, color2) {
+        // Find the last space to split book name and chapter:verse
+        var spaceIdx = -1;
+        for (var i = text.length() - 1; i >= 0; i--) {
+            if (text.substring(i, i + 1).equals(" ")) {
+                spaceIdx = i;
+                break;
+            }
+        }
+
+        if (spaceIdx == -1) {
+            dc.setColor(color2, Graphics.COLOR_TRANSPARENT);
+            drawArcText(dc, cx, cy, radius, text, font, false);
+            return;
+        }
+
+        var bookName = text.substring(0, spaceIdx);
+        var chapterVerse = text.substring(spaceIdx + 1);
+
+        // Calculate total width
+        var totalW = 0.0;
+        for (var i = 0; i < text.length(); i++) {
+            totalW += dc.getTextWidthInPixels(text.substring(i, i + 1), font);
+        }
+
+        var spaceW = dc.getTextWidthInPixels(" ", font);
+
+        // Starting angle (centered at 6 o'clock)
+        var a = -(totalW / radius) / 2.0;
+
+        // Draw book name in color1
+        dc.setColor(color1, Graphics.COLOR_TRANSPARENT);
+        for (var i = 0; i < bookName.length(); i++) {
+            var ch = bookName.substring(i, i + 1);
+            var cw = dc.getTextWidthInPixels(ch, font);
+            var mid = a + (cw / 2.0) / radius;
+            var x = cx + (radius * Math.sin(mid));
+            var yy = cy + (radius * Math.cos(mid));
+            dc.drawText(x, yy, font, ch,
+                        Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            a += cw / radius;
+        }
+
+        // Advance angle past the space (invisible glyph)
+        a += spaceW / radius;
+
+        // Draw chapter:verse in color2
+        dc.setColor(color2, Graphics.COLOR_TRANSPARENT);
+        for (var i = 0; i < chapterVerse.length(); i++) {
+            var ch = chapterVerse.substring(i, i + 1);
+            var cw = dc.getTextWidthInPixels(ch, font);
+            var mid = a + (cw / 2.0) / radius;
+            var x = cx + (radius * Math.sin(mid));
+            var yy = cy + (radius * Math.cos(mid));
+            dc.drawText(x, yy, font, ch,
+                        Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            a += cw / radius;
+        }
+    }
+
 // Draw text along an arc. top=true centers it at 12 o'clock (text reads left to
     // right across the top rim); top=false centers it at 6 o'clock along the bottom.
     // The 4S has no text rotation API, so glyphs stay upright; only their position
@@ -376,25 +474,7 @@ class VersesFaceView extends WatchUi.WatchFace {
         }
     }
 
-    // Which verse is "current", per the user's rotation setting. Deterministic,
-    // no stored state. interval: 0=daily, 1=hourly, 2=fixed (first verse).
-    private function verseIndex(interval) {
-        if (DEBUG_INDEX >= 0) {
-            return DEBUG_INDEX;
-        }
-        if (interval == 2) {
-            return 0;
-        }
-        var period = (interval == 0) ? 86400 : 3600;   // daily : hourly
-        return (Time.now().value() / period) % VERSE_COUNT;
-    }
 
-    private function loadVerse(idx) {
-        var data = WatchUi.loadResource(Rez.JsonData.Verses);
-        var entry = data[idx];
-        _ref = entry["r"];
-        _verse = entry["t"];
-    }
 
     private function updateSteps() {
         try {
