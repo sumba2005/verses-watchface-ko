@@ -8,6 +8,7 @@ class VerseWidgetView extends WatchUi.View {
     private const LINE_GAP = 2;
 
     private var _font;
+    private var _refFont;
     private var _ref = "";
     private var _verse = "";
     private var _lines = [];
@@ -23,6 +24,7 @@ class VerseWidgetView extends WatchUi.View {
 
     function onLayout(dc) {
         _font = WatchUi.loadResource(Rez.Fonts.VerseFont);
+        _refFont = WatchUi.loadResource(Rez.Fonts.RefFont);
         loadCurrentVerse();
     }
 
@@ -108,7 +110,7 @@ class VerseWidgetView extends WatchUi.View {
 
         // Draw reference at the bottom (accent color matching default)
         dc.setColor(0x55AAFF, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(w / 2, h - 25, _font, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, h - 25, _refFont, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
     private function drawDots(dc, w, dotY) {

@@ -28,6 +28,7 @@ class VersesFaceView extends WatchUi.WatchFace {
     private const MAX_BOOK_NAME_LEN = 12;  // limit book name to stay within 7:30 rim edge
 
     private var _font;
+    private var _refFont;
     private var _loadedIdx = -1;
     private var _lastPeriodId = -1;
     private var _ref = "";
@@ -55,6 +56,7 @@ class VersesFaceView extends WatchUi.WatchFace {
 
     function onLayout(dc) {
         _font = WatchUi.loadResource(Rez.Fonts.VerseFont);
+        _refFont = WatchUi.loadResource(Rez.Fonts.RefFont);
     }
 
     function onTap(clickEvent) {
@@ -263,7 +265,7 @@ class VersesFaceView extends WatchUi.WatchFace {
 
         // Reference arc with adjusted radius if needed
         var refRadius = _refRadiusAdjusted ? (h * REF_RADIUS_MIN) : (h * 0.40);
-        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, _font, accent, 0xFF5555);
+        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, _refFont, accent, 0xFF5555);
 
         // Battery and pedometer
         if (showBatt) {
@@ -312,7 +314,7 @@ class VersesFaceView extends WatchUi.WatchFace {
 
         // Reference arc (adjusted radius)
         var refRadius = _refRadiusAdjusted ? (h * REF_RADIUS_MIN) : (h * 0.40);
-        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, _font, accent, 0xFF5555);
+        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, _refFont, accent, 0xFF5555);
 
         // Battery and pedometer (scaled down)
         if (showBatt) {

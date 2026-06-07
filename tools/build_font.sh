@@ -21,30 +21,63 @@ cd "$(dirname "$0")/.."
 
 LANG="${1:-kor}"                              # language code: matches verses-<lang>.csv / resources-<lang>/
 # Sensible default TTF per language; override with TTF=/path/to.ttf
-if [ "$LANG" = "kor" ]; then
-    DEFAULT_TTF="tools/NotoSansKR-Regular.ttf"
-else
-    DEFAULT_TTF="tools/NotoSans-Regular.ttf"
-fi
+DEFAULT_TTF="tools/NotoSansKR-Regular.otf"
 TTF="${TTF:-$DEFAULT_TTF}"
 SIZE="${SIZE:-30}"                            # point size; tune so all verses fit one screen
 GLYPHS="tools/glyphs-$LANG.txt"
-OUT_DIR="resources-$LANG/fonts"
+OUT_DIR="${OUT_DIR:-resources_${LANG}/fonts}"
 OUT="$OUT_DIR/verse"
 
 [ -f "$GLYPHS" ] || { echo "Missing $GLYPHS — run: python3 tools/build_resources.py $LANG"; exit 1; }
 [ -f "$TTF" ]    || { echo "Missing font TTF at $TTF (set TTF=/path/to.ttf)"; exit 1; }
-command -v fontbm >/dev/null || { echo "fontbm not found — see header for install link"; exit 1; }
+FONTBM="fontbm"
+if [ -f "tools/fontbm" ]; then
+    FONTBM="tools/fontbm"
+elif command -v fontbm >/dev/null; then
+    FONTBM="fontbm"
+else
+    echo "fontbm not found — see header for install link"
+    exit 1
+fi
 
 mkdir -p "$OUT_DIR"
 
-fontbm \
+# Determine size for reference font
+if [ "$SIZE" -eq 12 ]; then
+    REF_SIZE="${REF_SIZE:-10}"
+else
+    REF_SIZE="${REF_SIZE:-20}"
+fi
+
+echo "Building verse font (size $SIZE)..."
+"$FONTBM" \
   --font-file "$TTF" \
   --font-size "$SIZE" \
   --chars-file "$GLYPHS" \
   --texture-size 512x512 \
   --color 255,255,255 \
-  --output "$OUT"
+  --output "$OUT_DIR/verse"
+
+if [ -f "${OUT_DIR}/verse_0.png" ]; then
+    mv "${OUT_DIR}/verse_0.png" "${OUT_DIR}/verse.png"
+    # Update the .fnt file to reference verse.png instead of verse_0.png
+    sed -i 's/file="verse_0.png"/file="verse.png"/g' "${OUT_DIR}/verse.fnt"
+fi
+
+echo "Building reference font (size $REF_SIZE)..."
+"$FONTBM" \
+  --font-file "$TTF" \
+  --font-size "$REF_SIZE" \
+  --chars-file "$GLYPHS" \
+  --texture-size 512x512 \
+  --color 255,255,255 \
+  --output "$OUT_DIR/ref"
+
+if [ -f "${OUT_DIR}/ref_0.png" ]; then
+    mv "${OUT_DIR}/ref_0.png" "${OUT_DIR}/ref.png"
+    # Update the .fnt file to reference ref.png instead of ref_0.png
+    sed -i 's/file="ref_0.png"/file="ref.png"/g' "${OUT_DIR}/ref.fnt"
+fi
 
 echo "Generated $OUT.fnt + $OUT.png  (lang=$LANG)"
 cat <<EOF
