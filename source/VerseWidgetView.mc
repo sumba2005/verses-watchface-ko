@@ -108,7 +108,7 @@ class VerseWidgetView extends WatchUi.View {
 
         // Draw reference at the bottom (accent color matching default)
         dc.setColor(0x55AAFF, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(w / 2, h - 25, Graphics.FONT_XTINY, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, h - 25, _font, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
     private function drawDots(dc, w, dotY) {
