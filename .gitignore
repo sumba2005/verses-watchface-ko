@@ -2,3 +2,17 @@ bin/
 *.prg
 *.iq
 *.debug.xml
+
+# Developer keys and local credentials
+*.key
+*.key.der
+developer_key
+verses-test.key
+
+# Local/temporary tools and caches
+.claude/
+test_0.png
+tools/NotoSansKR-Regular.otf
+tools/noto.zip
+run_build_and_sideload.sh
+치유.csv

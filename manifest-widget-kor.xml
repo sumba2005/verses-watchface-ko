@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
+    <!--
+      "verses" widget (KOREAN build). Allows paginating through Korean verses.
+      Build with: monkeyc -f widget-kor.jungle
+      Coexists with watchface on the same watch.
+    -->
+    <iq:application
+        entry="VerseWidgetApp"
+        id="fb597ee5a8d7434f857654a71a4c1ede"
+        launcherIcon="@Drawables.LauncherIcon"
+        minApiLevel="3.2.0"
+        name="@Strings.AppName"
+        type="widget"
+        version="1.0.0">
+        <iq:products>
+            <iq:product id="vivoactive4"/>
+            <iq:product id="vivoactive4s"/>
+        </iq:products>
+        <iq:permissions/>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+    </iq:application>
+</iq:manifest>

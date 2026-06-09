@@ -1,0 +1,6 @@
+# ENGLISH Widget build. `monkeyc -f widget-eng.jungle ...`
+# Compiles only widget source code and uses resources_eng.
+
+project.manifest = manifest-widget-eng.xml
+base.sourcePath = source/VerseWidgetApp.mc;source/VerseWidgetView.mc;source/VerseWidgetDelegate.mc;source/VerseWidgetGlanceView.mc
+base.resourcePath = resources;resources_eng
