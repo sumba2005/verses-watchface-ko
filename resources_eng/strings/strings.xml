@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string id="AppName">Verses</string>
+    <string id="WidgetName">Healing Verses</string>
+    <string id="GlanceSubtitle">Today's Verse</string>
 
     <!-- Settings labels (rendered by Garmin Connect Mobile, not the watch font). -->
     <string id="SetTimeFormat">24-hour clock</string>

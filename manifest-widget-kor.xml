@@ -10,9 +10,9 @@
         id="fb597ee5a8d7434f857654a71a4c1ede"
         launcherIcon="@Drawables.LauncherIcon"
         minApiLevel="3.2.0"
-        name="@Strings.AppName"
+        name="@Strings.WidgetName"
         type="widget"
-        version="1.0.0">
+        version="1.2.0">
         <iq:products>
             <iq:product id="vivoactive4"/>
             <iq:product id="vivoactive4s"/>
