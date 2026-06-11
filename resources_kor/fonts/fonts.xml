@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+    <!-- Default 20pt verse / 17pt ref font.
+         High-res large screens (epix2, fenix7x*, fr965, venu3, fenix847mm, ...) use
+         resources_kor-large (30pt) via monkey.jungle so ~6 readable lines fit instead of
+         10+ tiny ones. See also resources_kor-vivoactive4s for the 12pt small-screen variant. -->
     <font id="VerseFont" filename="verse.fnt"/>
     <font id="RefFont" filename="ref.fnt"/>
 </resources>

@@ -45,12 +45,19 @@ echo ""
 
 mkdir -p bin
 
-# Extract product ids from the manifests
-WF_PRODUCTS=$(grep -o '<iq:product[^>]*id="[^"]*"' manifest-kor.xml | grep -o 'id="[^"]*"' | sed 's/id="//;s/"//' | tr '\n' ' ')
-WD_PRODUCTS=$(grep -o '<iq:product[^>]*id="[^"]*"' manifest-widget-kor.xml | grep -o 'id="[^"]*"' | sed 's/id="//;s/"//' | tr '\n' ' ')
+# Extract product ids from supported_watch_list.md
+if [ ! -f supported_watch_list.md ]; then
+    echo "ERROR: supported_watch_list.md not found"
+    exit 1
+fi
+
+WF_PRODUCTS=$(awk '/Watchfaces/{found=1; next} found && /^---/{exit} found' supported_watch_list.md \
+    | grep '^|' | grep -oP '(?<=`)[^`]+(?=`)' | tr '\n' ' ')
+WD_PRODUCTS=$(awk '/Widgets/{found=1; next} found' supported_watch_list.md \
+    | grep '^|' | grep -oP '(?<=`)[^`]+(?=`)' | tr '\n' ' ')
 
 if [ -z "$WF_PRODUCTS" ] && [ -z "$WD_PRODUCTS" ]; then
-    echo "ERROR: could not parse any <iq:product> from manifests"
+    echo "ERROR: could not parse any device IDs from supported_watch_list.md"
     exit 1
 fi
 
@@ -89,19 +96,10 @@ for dev in $WF_PRODUCTS; do
     build_one "watchface" "monkey.jungle" "manifest-kor.xml" "verses-kor" "$dev"
 done
 
-echo "=== Building Widgets ==="
-for dev in $WD_PRODUCTS; do
-    build_one "widget"    "widget-kor.jungle" "manifest-widget-kor.xml" "verses-widget-kor" "$dev"
-done
-
-# Convenience aliases for the most common device
+# Convenience alias for the most common device
 if [ -f bin/verses-kor-vivoactive4.prg ]; then
     cp -f bin/verses-kor-vivoactive4.prg bin/verses-kor.prg
     echo "Created alias: bin/verses-kor.prg"
-fi
-if [ -f bin/verses-widget-kor-vivoactive4.prg ]; then
-    cp -f bin/verses-widget-kor-vivoactive4.prg bin/verses-widget-kor.prg
-    echo "Created alias: bin/verses-widget-kor.prg"
 fi
 
 echo ""
