@@ -4,3 +4,7 @@
 project.manifest = manifest-widget-kor.xml
 base.sourcePath = source/VerseWidgetApp.mc;source/VerseWidgetView.mc;source/VerseWidgetDelegate.mc;source/VerseWidgetGlanceView.mc
 base.resourcePath = resources;resources_kor
+
+# High-res large font for the widget on the same devices as the watch face.
+# (See monkey.jungle for the list and rationale.)
+

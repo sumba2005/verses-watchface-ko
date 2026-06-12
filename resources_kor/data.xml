@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-    <!-- All 48 verses (~6 KB). Loaded on demand; only one verse is ever rendered. -->
-    <jsonData id="Verses" filename="data/verses.json"/>
+    <jsonData id="VersesMeta" filename="data/verses_meta.json"/>
+    <jsonData id="verses_0" filename="data/verses_0.json"/>
+    <jsonData id="verses_1" filename="data/verses_1.json"/>
+    <jsonData id="verses_2" filename="data/verses_2.json"/>
+    <jsonData id="verses_3" filename="data/verses_3.json"/>
+    <jsonData id="verses_4" filename="data/verses_4.json"/>
+    <jsonData id="verses_5" filename="data/verses_5.json"/>
+    <jsonData id="verses_6" filename="data/verses_6.json"/>
+    <jsonData id="verses_7" filename="data/verses_7.json"/>
+    <jsonData id="verses_8" filename="data/verses_8.json"/>
+    <jsonData id="verses_9" filename="data/verses_9.json"/>
 </resources>

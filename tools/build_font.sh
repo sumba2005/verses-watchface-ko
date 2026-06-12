@@ -45,22 +45,30 @@ mkdir -p "$OUT_DIR"
 # Determine size for reference font
 if [ "$SIZE" -eq 12 ]; then
     REF_SIZE="${REF_SIZE:-12}"
+elif [ "$SIZE" -ge 28 ]; then
+    # Large fonts (e.g. 30pt for high-res watches) often need bigger texture or multiple pages.
+    REF_SIZE="${REF_SIZE:-25}"
 else
     REF_SIZE="${REF_SIZE:-17}"
 fi
 
-echo "Building verse font (size $SIZE)..."
+TEXTURE_SIZE="${TEXTURE_SIZE:-512x512}"
+if [ "$SIZE" -ge 28 ]; then
+    TEXTURE_SIZE="${TEXTURE_SIZE:-1024x1024}"
+fi
+
+echo "Building verse font (size $SIZE, texture $TEXTURE_SIZE)..."
 "$FONTBM" \
   --font-file "$TTF" \
   --font-size "$SIZE" \
   --chars-file "$GLYPHS" \
-  --texture-size 512x512 \
+  --texture-size "$TEXTURE_SIZE" \
   --color 255,255,255 \
   --output "$OUT_DIR/verse"
 
-if [ -f "${OUT_DIR}/verse_0.png" ]; then
+# Handle single-page (verse_0.png → verse.png) or multi-page (leave verse.png + verse_1.png etc.)
+if [ -f "${OUT_DIR}/verse_0.png" ] && [ ! -f "${OUT_DIR}/verse_1.png" ]; then
     mv "${OUT_DIR}/verse_0.png" "${OUT_DIR}/verse.png"
-    # Update the .fnt file to reference verse.png instead of verse_0.png
     sed -i 's/file="verse_0.png"/file="verse.png"/g' "${OUT_DIR}/verse.fnt"
 fi
 
@@ -69,13 +77,12 @@ echo "Building reference font (size $REF_SIZE)..."
   --font-file "$TTF" \
   --font-size "$REF_SIZE" \
   --chars-file "$GLYPHS" \
-  --texture-size 512x512 \
+  --texture-size "$TEXTURE_SIZE" \
   --color 255,255,255 \
   --output "$OUT_DIR/ref"
 
-if [ -f "${OUT_DIR}/ref_0.png" ]; then
+if [ -f "${OUT_DIR}/ref_0.png" ] && [ ! -f "${OUT_DIR}/ref_1.png" ]; then
     mv "${OUT_DIR}/ref_0.png" "${OUT_DIR}/ref.png"
-    # Update the .fnt file to reference ref.png instead of ref_0.png
     sed -i 's/file="ref_0.png"/file="ref.png"/g' "${OUT_DIR}/ref.fnt"
 fi
 
@@ -87,8 +94,12 @@ Next:
        <resources>
          <font id="VerseFont" filename="verse.fnt"/>
        </resources>
-  2) (4S only) for a smaller screen font, re-run with SIZE lower and copy the
+  2) (4S only) for a smaller screen font, re-run with SIZE=12 and copy the
      output into resources-$LANG-vivoactive4s/fonts/ (device qualifier override).
-  3) Rebuild and verify in the simulator that all verses fit one screen;
-     if any overflow, lower SIZE and re-run.
+  3) For high-resolution/large-screen watches (epix2, fenix7x, fr965, venu3, fenix847mm etc.),
+     build the 50% larger font once with:
+       SIZE=30 REF_SIZE=25 OUT_DIR=resources_${LANG}-large/fonts ./tools/build_font.sh $LANG
+     Then map those devices in monkey.jungle so they pick resources_kor-large first.
+  4) Rebuild the .prg (monkeyc -f monkey.jungle -d <device> ...) and test that the target
+     line count is reasonable (~6 lines on large font, more on default).
 EOF

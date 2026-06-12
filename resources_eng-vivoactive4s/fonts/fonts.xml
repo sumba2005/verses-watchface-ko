@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<resources>
-    <!-- Smaller 12px verse font for the 218px vivoactive4s screen. -->
-    <font id="VerseFont" filename="verse.fnt"/>
-    <font id="RefFont" filename="ref.fnt"/>
-</resources>

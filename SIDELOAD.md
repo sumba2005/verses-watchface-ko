@@ -20,10 +20,7 @@ monkeyc --version
 With the pagination changes, rebuild the .prg files:
 
 ```bash
-# English version
-monkeyc -f eng.jungle -o bin/verses-face-4s.prg -l
-
-# Or Korean version
+# Build Korean version
 monkeyc -f monkey.jungle -o bin/verses-kor-4s.prg -l
 ```
 
@@ -35,7 +32,7 @@ If the build succeeds, you'll see: `SUCCESS` and have a fresh .prg in `bin/`
 
 1. Connect watch via USB to computer
 2. Open Garmin BaseCamp
-3. File → Import → select `bin/verses-face-4s.prg`
+3. File → Import → select `bin/verses-kor-4s.prg`
 4. Select your watch as the destination
 5. Wait for transfer to complete
 
@@ -47,7 +44,7 @@ If the build succeeds, you'll see: `SUCCESS` and have a fresh .prg in `bin/`
    ```
    mkdir GARMIN/APPS/3f4362d960df42419ab01640cdf6788c
    ```
-4. Copy `bin/verses-face-4s.prg` into that folder
+4. Copy `bin/verses-kor-4s.prg` into that folder
 5. Safely eject and disconnect
 6. Watch will auto-detect the new app
 
@@ -80,7 +77,6 @@ With your updated code:
 → Rebuild resources first:
 ```bash
 cd tools/
-python3 build_resources.py eng  # for English
 python3 build_resources.py kor  # for Korean
 ```
 
@@ -91,17 +87,17 @@ python3 build_resources.py kor  # for Korean
 
 | File | Purpose |
 |------|---------|
-| `manifest-eng.xml` | App metadata (English) |
+| `manifest-kor.xml` | App metadata (Korean) |
 | `source/VersesFaceView.mc` | Main watchface + pagination logic |
 | `source/VersesFaceApp.mc` | App entry point |
-| `resources-eng/data/verses.json` | English verses data |
-| `bin/verses-face-4s.prg` | Compiled app (ready to sideload) |
+| `resources_kor/data/verses_meta.json` | Korean verses metadata |
+| `bin/verses-kor-4s.prg` | Compiled app (ready to sideload) |
 
 ## Build Output Files
 
 After successful build, you'll have:
-- `verses-face-4s.prg` — the watchface app
-- `verses-face-4s.prg.debug.xml` — debug symbols
-- `verses-face-4s-settings.json` — settings metadata
+- `verses-kor-4s.prg` — the watchface app
+- `verses-kor-4s.prg.debug.xml` — debug symbols
+- `verses-kor-4s-settings.json` — settings metadata
 
 Only the `.prg` file is needed for sideloading.

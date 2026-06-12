@@ -46,12 +46,14 @@ export MY_KEY="$HOME/garmin-dev-key.p12"
 # OR
 # export MY_KEY="$HOME/.Garmin/ConnectIQ/Certificates/your-key.p12"
 
-# Build English version
-monkeyc -f eng.jungle -o bin/verses-face-4s.prg -y $MY_KEY
+# Quick build for vivoactive4/4s
+monkeyc -f monkey.jungle -d vivoactive4s -o bin/verses-kor-4s.prg -y $MY_KEY
 
-# Build Korean version (optional)
-monkeyc -f monkey.jungle -o bin/verses-kor-4s.prg -y $MY_KEY
+# Build .prg for every supported Garmin watch (recommended for broad compatibility)
+./build-all.sh $MY_KEY
 ```
+
+The list of devices lives in the `<iq:products>` section of `manifest-kor.xml` (watchface) and `manifest-widget-kor.xml` (widget). Run `build-all.sh` after adding/removing devices.
 
 **Expected output:**
 ```
@@ -66,7 +68,7 @@ If you get an error about the key format, try these alternatives:
 ## Step 4: Verify Build
 
 ```bash
-ls -lh bin/verses-face-4s.prg
+ls -lh bin/verses-kor-4s.prg
 # Should be ~130-150 KB and recently modified
 ```
 
@@ -76,7 +78,7 @@ ls -lh bin/verses-face-4s.prg
 1. Plug watch into computer via USB
 2. Open Garmin BaseCamp
 3. File → Import
-4. Select: `bin/verses-face-4s.prg`
+4. Select: `bin/verses-kor-4s.prg`
 5. Choose watch as destination
 6. Click Import/Transfer
 7. Wait for completion (usually 10-30 seconds)
@@ -85,7 +87,7 @@ ls -lh bin/verses-face-4s.prg
 1. Connect watch via USB (it mounts as a drive)
 2. Navigate to: `GARMIN/APPS/`
 3. Create folder: `3f4362d960df42419ab01640cdf6788c` (app ID from manifest)
-4. Copy `bin/verses-face-4s.prg` into that folder
+4. Copy `bin/verses-kor-4s.prg` into that folder
 5. Eject/unmount safely
 6. Watch auto-detects new app on next boot
 
@@ -136,9 +138,9 @@ ls -lh bin/verses-face-4s.prg
 
 After successful build:
 ```
-bin/verses-face-4s.prg              ← Sideload this file
-bin/verses-face-4s.prg.debug.xml    ← Debug symbols (optional)
-bin/verses-face-4s-settings.json    ← Settings metadata (optional)
+bin/verses-kor-4s.prg              ← Sideload this file
+bin/verses-kor-4s.prg.debug.xml    ← Debug symbols (optional)
+bin/verses-kor-4s-settings.json    ← Settings metadata (optional)
 ```
 
 Only the `.prg` file is needed for sideloading.

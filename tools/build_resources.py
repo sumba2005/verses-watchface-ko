@@ -81,8 +81,25 @@ def main():
     }
 
     os.makedirs(os.path.dirname(OUT_JSON), exist_ok=True)
-    with open(OUT_JSON, "w", encoding="utf-8") as f:
-        json.dump(output_data, f, ensure_ascii=False, separators=(",", ":"))
+    
+    # Write metadata file
+    meta_path = os.path.join(os.path.dirname(OUT_JSON), "verses_meta.json")
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump({"total": len(verses), "chunkSize": 20}, f, separators=(",", ":"))
+
+    # Write 10 split JSON chunk files (each containing up to 20 verses)
+    chunk_size = 20
+    for i in range(10):
+        start = i * chunk_size
+        end = start + chunk_size
+        chunk_verses = verses[start:end]
+        chunk_data = {
+            "b": books if chunk_verses else [],
+            "v": chunk_verses
+        }
+        chunk_path = os.path.join(os.path.dirname(OUT_JSON), f"verses_{i}.json")
+        with open(chunk_path, "w", encoding="utf-8") as f:
+            json.dump(chunk_data, f, ensure_ascii=False, separators=(",", ":"))
 
     # Glyph set: every character that can ever be drawn (references + verse bodies).
     glyphs = set()
@@ -103,8 +120,7 @@ def main():
 
     hangul = [c for c in glyphs if "가" <= c <= "힣"]
     print(f"language       : {LANG}")
-    print(f"verses written : {len(verses)}  -> {os.path.relpath(OUT_JSON, ROOT)}")
-    print(f"json bytes      : {os.path.getsize(OUT_JSON)}")
+    print(f"verses written : {len(verses)}  -> {os.path.relpath(meta_path, ROOT)}")
     print(f"unique glyphs   : {len(glyphs)} (Hangul syllables: {len(hangul)})")
     print(f"glyph list      : {os.path.relpath(OUT_GLYPHS, ROOT)}")
 

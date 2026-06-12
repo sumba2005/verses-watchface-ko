@@ -1,0 +1,8 @@
+Date: 2026-06-09
+Device: Fenix 6
+Test Result: SUCCESSFUL
+Details:
+- Tested Korean watch face (verses-kor-fenix6.prg) in simulator.
+- Verified fix for Out Of Memory crash by splitting verses into 10 smaller JSON chunks loaded dynamically via verses_meta.json.
+- Verified fix for broken book name font by restoring custom _refFont (extracted Hangul subset glyphs) instead of using system FONT_SMALL.
+- Layout, memory, and font rendering verified as correct and stable.

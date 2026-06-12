@@ -35,23 +35,31 @@ class VerseWidgetView extends WatchUi.View {
 
     private function loadCurrentVerse() {
         try {
-            var data = WatchUi.loadResource(Rez.JsonData.Verses);
-            if (data != null) {
-                var versesList = data["v"];
-                var books = data["b"];
-                if (versesList != null && versesList.size() > 0) {
-                    var interval = getProp("VerseInterval", 1);
-                    var period = (interval == 0) ? 86400 : 3600;
-                    var index = 0;
-                    if (interval != 2) {
-                        index = (Time.now().value() / period) % versesList.size();
+            var meta = WatchUi.loadResource(Rez.JsonData.VersesMeta);
+            if (meta != null) {
+                var total = meta["total"];
+                var interval = getProp("VerseInterval", 1);
+                var period = (interval == 0) ? 86400 : 3600;
+                var index = 0;
+                if (interval != 2) {
+                    index = (Time.now().value() / period) % total;
+                }
+                
+                var chunkId = (index / 20).toNumber();
+                var chunkIdx = index % 20;
+
+                var data = loadChunk(chunkId);
+                if (data != null) {
+                    var versesList = data["v"];
+                    var books = data["b"];
+                    if (versesList != null && chunkIdx < versesList.size()) {
+                        var entry = versesList[chunkIdx];
+                        var bookIdx = entry[0];
+                        var ch = entry[1];
+                        var vn = entry[2];
+                        _verse = entry[3];
+                        _ref = books[bookIdx] + " " + ch.toString() + ":" + vn.toString();
                     }
-                    var entry = versesList[index];
-                    var bookIdx = entry[0];
-                    var ch = entry[1];
-                    var vn = entry[2];
-                    _verse = entry[3];
-                    _ref = books[bookIdx] + " " + ch.toString() + ":" + vn.toString();
                 }
             }
         } catch (ex) {
@@ -118,24 +126,24 @@ class VerseWidgetView extends WatchUi.View {
         }
         if (spaceIdx == -1) {
             dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(w / 2, h - 25, Graphics.FONT_SMALL, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(w / 2, h - 25, _refFont, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         } else {
             var bookName = _ref.substring(0, spaceIdx);
             var chapterVerse = _ref.substring(spaceIdx + 1, _ref.length());
             
-            var bookW = dc.getTextWidthInPixels(bookName, Graphics.FONT_SMALL);
-            var spaceW = dc.getTextWidthInPixels(" ", Graphics.FONT_SMALL);
-            var cvW = dc.getTextWidthInPixels(chapterVerse, Graphics.FONT_SMALL);
+            var bookW = dc.getTextWidthInPixels(bookName, _refFont);
+            var spaceW = dc.getTextWidthInPixels(" ", _refFont);
+            var cvW = dc.getTextWidthInPixels(chapterVerse, _refFont);
             var totalW = bookW + spaceW + cvW;
 
             var startX = (w - totalW) / 2;
             var yY = h - 25;
 
             dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT); // Red
-            dc.drawText(startX + (bookW / 2), yY, Graphics.FONT_SMALL, bookName, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(startX + (bookW / 2), yY, _refFont, bookName, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
             dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT); // Red
-            dc.drawText(startX + bookW + spaceW + (cvW / 2), yY, Graphics.FONT_SMALL, chapterVerse, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(startX + bookW + spaceW + (cvW / 2), yY, _refFont, chapterVerse, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }
 
@@ -212,4 +220,19 @@ class VerseWidgetView extends WatchUi.View {
         if (cur.length() > 0) { out.add(cur); }
         return out;
     }
+
+    private function loadChunk(chunkId) {
+        if (chunkId == 0) { return WatchUi.loadResource(Rez.JsonData.verses_0); }
+        if (chunkId == 1) { return WatchUi.loadResource(Rez.JsonData.verses_1); }
+        if (chunkId == 2) { return WatchUi.loadResource(Rez.JsonData.verses_2); }
+        if (chunkId == 3) { return WatchUi.loadResource(Rez.JsonData.verses_3); }
+        if (chunkId == 4) { return WatchUi.loadResource(Rez.JsonData.verses_4); }
+        if (chunkId == 5) { return WatchUi.loadResource(Rez.JsonData.verses_5); }
+        if (chunkId == 6) { return WatchUi.loadResource(Rez.JsonData.verses_6); }
+        if (chunkId == 7) { return WatchUi.loadResource(Rez.JsonData.verses_7); }
+        if (chunkId == 8) { return WatchUi.loadResource(Rez.JsonData.verses_8); }
+        if (chunkId == 9) { return WatchUi.loadResource(Rez.JsonData.verses_9); }
+        return null;
+    }
+
 }

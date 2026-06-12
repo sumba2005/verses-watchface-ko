@@ -23,9 +23,13 @@ class VersesFaceView extends WatchUi.WatchFace {
     private const REF_RADIUS_MIN = 0.37;   // min reference radius (conservative fallback)
     private const REGION_TOP_TIGHT = 0.16; // tight region top for fallback
     private const REGION_BOT_TIGHT = 0.80; // tight region bottom for fallback
-    private const MAX_TRUNCATE_LINES = 4;
     private const PAGINATION_TIMEOUT = 10000; // milliseconds
     private const MAX_BOOK_NAME_LEN = 12;  // limit book name to stay within 7:30 rim edge
+
+    // Adaptive layout for the large (30pt) font used on high-res watches.
+    // These watches have enough pixels that the default 20pt font would show 9-12+
+    // tiny lines; the 50% larger font targets a readable ~6 lines instead.
+    private var _verseFontHeight = 0;
 
     private var _font;
     private var _refFont;
@@ -57,6 +61,7 @@ class VersesFaceView extends WatchUi.WatchFace {
     function onLayout(dc) {
         _font = WatchUi.loadResource(Rez.Fonts.VerseFont);
         _refFont = WatchUi.loadResource(Rez.Fonts.RefFont);
+        _verseFontHeight = dc.getFontHeight(_font);
     }
 
     function onTap(clickEvent) {
@@ -76,6 +81,7 @@ class VersesFaceView extends WatchUi.WatchFace {
     function onUpdate(dc) {
         var w = dc.getWidth();
         var h = dc.getHeight();
+
 
         // Check for pagination timeout
         var now = System.getTimer();
@@ -98,44 +104,49 @@ class VersesFaceView extends WatchUi.WatchFace {
         }
 
         var period = (interval == 0) ? 86400 : 3600;
-        var periodId = 0;
-        if (interval != 2) {
-            periodId = (Time.now().value() / period).toNumber();
-        }
+        var periodId = (Time.now().value() / period).toNumber();
 
         if (periodId != _lastPeriodId || _loadedIdx == -1) {
             _lastPeriodId = periodId;
             try {
-                var data = WatchUi.loadResource(Rez.JsonData.Verses);
-                if (data != null) {
-                    var versesList = data["v"];
-                    var books = data["b"];
-                    if (versesList != null && versesList.size() > 0) {
-                        var idx = 0;
-                        if (DEBUG_INDEX >= 0) {
-                            idx = DEBUG_INDEX;
-                        } else if (interval != 2) {
-                            idx = periodId % versesList.size();
-                        }
-                        _loadedIdx = idx;
-                        var entry = versesList[idx];
-                        var bookIdx = entry[0];
-                        var ch = entry[1];
-                        var vn = entry[2];
-                        _verse = entry[3];
-                        var bookName = "";
-                        if (books != null && bookIdx >= 0 && bookIdx < books.size()) {
-                            bookName = books[bookIdx];
-                            if (bookName.length() > MAX_BOOK_NAME_LEN) {
-                                bookName = bookName.substring(0, MAX_BOOK_NAME_LEN);
+                var meta = WatchUi.loadResource(Rez.JsonData.VersesMeta);
+                if (meta != null) {
+                    var total = meta["total"];
+                    var idx = 0;
+                    if (DEBUG_INDEX >= 0) {
+                        idx = DEBUG_INDEX;
+                    } else if (interval != 2) {
+                        idx = periodId % total;
+                    }
+                    _loadedIdx = idx;
+
+                    var chunkId = (idx / 20).toNumber();
+                    var chunkIdx = idx % 20;
+
+                    var data = loadChunk(chunkId);
+                    if (data != null) {
+                        var versesList = data["v"];
+                        var books = data["b"];
+                        if (versesList != null && chunkIdx < versesList.size()) {
+                            var entry = versesList[chunkIdx];
+                            var bookIdx = entry[0];
+                            var ch = entry[1];
+                            var vn = entry[2];
+                            _verse = entry[3];
+                            var bookName = "";
+                            if (books != null && bookIdx >= 0 && bookIdx < books.size()) {
+                                bookName = books[bookIdx];
+                                if (bookName.length() > MAX_BOOK_NAME_LEN) {
+                                    bookName = bookName.substring(0, MAX_BOOK_NAME_LEN);
+                                }
                             }
+                            _ref = bookName + " " + ch.toString() + ":" + vn.toString();
+                            _needWrap = true;
+                            _inPagination = false;
+                            _currentPage = 0;
+                            _refRadiusAdjusted = false;
+                            _regionAdjusted = false;
                         }
-                        _ref = bookName + " " + ch.toString() + ":" + vn.toString();
-                        _needWrap = true;
-                        _inPagination = false;
-                        _currentPage = 0;
-                        _refRadiusAdjusted = false;
-                        _regionAdjusted = false;
                     }
                 }
             } catch (ex) {
@@ -160,8 +171,9 @@ class VersesFaceView extends WatchUi.WatchFace {
             if (h12 == 0) { h12 = 12; }
             timeStr = h12.format("%02d") + ":" + clock.min.format("%02d") + " " + ap;
         }
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        drawArcText(dc, w / 2, h / 2, h * 0.44, timeStr, Graphics.FONT_SMALL, true);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        var timeY = _usingLargeFont() ? (h * 0.05).toNumber() : (h * 0.08).toNumber();
+        dc.drawText(w / 2, timeY, Graphics.FONT_SMALL, timeStr, Graphics.TEXT_JUSTIFY_CENTER);
 
         // --- Wrapping logic with collision detection ---
         if (_needWrap) {
@@ -190,8 +202,8 @@ class VersesFaceView extends WatchUi.WatchFace {
         // Check collision with reference text (safe zone at h × 0.75)
         var lineH = dc.getFontHeight(_font) + LINE_GAP;
         var bodyH = _lines.size() * lineH;
-        var regionTop = (h * 0.18).toNumber();
-        var regionBot = (h * 0.75).toNumber(); // Safe zone
+        var regionTop = (h * getVerseNormalTopFactor()).toNumber();
+        var regionBot = (h * getVerseNormalBotFactor()).toNumber(); // Safe zone
         var y = regionTop + (((regionBot - regionTop) - bodyH) / 2);
 
         // If verse extends past safe zone, apply fallback cascade
@@ -211,7 +223,7 @@ class VersesFaceView extends WatchUi.WatchFace {
 
             if (y + bodyH > regionBot) {
                 // Step 3: Truncate to max lines
-                truncateVerseToLines(dc, maxW, MAX_TRUNCATE_LINES);
+                truncateVerseToLines(dc, maxW, getMaxTruncateLines());
                 // Recalculate after truncation
                 bodyH = _lines.size() * lineH;
             }
@@ -252,8 +264,8 @@ class VersesFaceView extends WatchUi.WatchFace {
     private function drawNormalMode(dc, w, h, accent, showBatt) {
         var lineH = dc.getFontHeight(_font) + LINE_GAP;
         var bodyH = _lines.size() * lineH;
-        var regionTop = _regionAdjusted ? (h * REGION_TOP_TIGHT).toNumber() : (h * 0.18).toNumber();
-        var regionBot = _regionAdjusted ? (h * REGION_BOT_TIGHT).toNumber() : (h * 0.84).toNumber();
+        var regionTop = _regionAdjusted ? (h * REGION_TOP_TIGHT).toNumber() : (h * getVerseNormalTopFactor()).toNumber();
+        var regionBot = _regionAdjusted ? (h * REGION_BOT_TIGHT).toNumber() : (h * getVerseNormalBotFactor()).toNumber();
         var y = regionTop + (((regionBot - regionTop) - bodyH) / 2);
         if (y < regionTop) { y = regionTop; }
 
@@ -263,15 +275,16 @@ class VersesFaceView extends WatchUi.WatchFace {
             y += lineH;
         }
 
-        // Reference arc with adjusted radius if needed
-        var refRadius = _refRadiusAdjusted ? (h * REF_RADIUS_MIN) : (h * 0.40);
-        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, Graphics.FONT_SMALL, 0xFF5555, 0xFF5555);
+        // Reference (straight text with collision shifting)
+        var refY = _refRadiusAdjusted ? (h * 0.87).toNumber() : (h * 0.84).toNumber();
+        dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(w / 2, refY, _refFont, _ref, Graphics.TEXT_JUSTIFY_CENTER);
 
         // Battery and pedometer
         if (showBatt) {
             var batt = System.getSystemStats().battery;
             var battStr = batt.format("%d") + "%";
-            dc.setColor(batt <= 15 ? 0xFF5555 : Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(batt <= 15 ? 0xFF5555 : Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
             drawVerticalText(dc, (w * 0.07).toNumber(), h / 2, Graphics.FONT_XTINY, battStr);
         }
 
@@ -283,7 +296,7 @@ class VersesFaceView extends WatchUi.WatchFace {
                 updateSteps();
             }
             var pedoStr = _stepsAvailable ? _steps.toString() : "--";
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
             drawVerticalText(dc, (w * 0.93).toNumber(), h / 2, Graphics.FONT_XTINY, pedoStr);
         }
     }
@@ -312,15 +325,16 @@ class VersesFaceView extends WatchUi.WatchFace {
             drawPaginationDots(dc, w, h);
         }
 
-        // Reference arc (adjusted radius)
-        var refRadius = _refRadiusAdjusted ? (h * REF_RADIUS_MIN) : (h * 0.40);
-        drawArcTextColored(dc, w / 2, h / 2, refRadius, _ref, Graphics.FONT_SMALL, 0xFF5555, 0xFF5555);
+        // Reference (straight text with collision shifting)
+        var refY = _refRadiusAdjusted ? (h * 0.87).toNumber() : (h * 0.84).toNumber();
+        dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(w / 2, refY, _refFont, _ref, Graphics.TEXT_JUSTIFY_CENTER);
 
         // Battery and pedometer (scaled down)
         if (showBatt) {
             var batt = System.getSystemStats().battery;
             var battStr = batt.format("%d") + "%";
-            dc.setColor(batt <= 15 ? 0xFF5555 : Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(batt <= 15 ? 0xFF5555 : Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
             drawVerticalText(dc, (w * 0.07).toNumber(), h / 2, Graphics.FONT_XTINY, battStr);
         }
 
@@ -332,7 +346,7 @@ class VersesFaceView extends WatchUi.WatchFace {
                 updateSteps();
             }
             var pedoStr = _stepsAvailable ? _steps.toString() : "--";
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
             drawVerticalText(dc, (w * 0.93).toNumber(), h / 2, Graphics.FONT_XTINY, pedoStr);
         }
     }
@@ -375,6 +389,35 @@ class VersesFaceView extends WatchUi.WatchFace {
     private function getProp(key, def) {
         var v = Application.Properties.getValue(key);
         return (v == null) ? def : v;
+    }
+
+    // === Adaptive geometry for large-font (high-res) watches ===
+    // These return more generous verse real-estate + tighter time/ref arcs so that
+    // the 50% larger font still yields a comfortable ~6 lines instead of forcing
+    // the fallback shrink/truncate on every verse.
+
+    private function _usingLargeFont() {
+        return _verseFontHeight > 36;   // 30pt Korean verse font is ~40+
+    }
+
+    private function getMaxTruncateLines() {
+        return _usingLargeFont() ? 8 : 4;
+    }
+
+    private function getTimeArcRadius(h) {
+        return _usingLargeFont() ? (h * 0.395) : (h * 0.44);
+    }
+
+    private function getVerseNormalTopFactor() {
+        return _usingLargeFont() ? 0.145 : 0.18;
+    }
+
+    private function getVerseNormalBotFactor() {
+        return _usingLargeFont() ? 0.79 : 0.75;
+    }
+
+    private function getRefNormalRadiusFactor() {
+        return _usingLargeFont() ? 0.36 : 0.40;
     }
 
     // Draw text stacked vertically (one glyph per row), centered on cy. Used for the
@@ -542,6 +585,20 @@ class VersesFaceView extends WatchUi.WatchFace {
         }
         if (cur.length() > 0) { out.add(cur); }
         return out;
+    }
+
+    private function loadChunk(chunkId) {
+        if (chunkId == 0) { return WatchUi.loadResource(Rez.JsonData.verses_0); }
+        if (chunkId == 1) { return WatchUi.loadResource(Rez.JsonData.verses_1); }
+        if (chunkId == 2) { return WatchUi.loadResource(Rez.JsonData.verses_2); }
+        if (chunkId == 3) { return WatchUi.loadResource(Rez.JsonData.verses_3); }
+        if (chunkId == 4) { return WatchUi.loadResource(Rez.JsonData.verses_4); }
+        if (chunkId == 5) { return WatchUi.loadResource(Rez.JsonData.verses_5); }
+        if (chunkId == 6) { return WatchUi.loadResource(Rez.JsonData.verses_6); }
+        if (chunkId == 7) { return WatchUi.loadResource(Rez.JsonData.verses_7); }
+        if (chunkId == 8) { return WatchUi.loadResource(Rez.JsonData.verses_8); }
+        if (chunkId == 9) { return WatchUi.loadResource(Rez.JsonData.verses_9); }
+        return null;
     }
 
 }

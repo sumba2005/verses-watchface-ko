@@ -36,24 +36,21 @@ fi
 
 mkdir -p bin
 
-echo "Building English version..."
-monkeyc -f eng.jungle -d vivoactive4s -o bin/verses-face-4s.prg -y "$KEY_PATH" -w && \
-echo "✅ English Watchface: bin/verses-face-4s.prg"
-
-echo ""
-echo "Building English Widget..."
-monkeyc -f widget-eng.jungle -d vivoactive4s -o bin/verses-widget-eng.prg -y "$KEY_PATH" -w && \
-echo "✅ English Widget: bin/verses-widget-eng.prg"
-
-echo ""
-echo "Building Korean version..."
-monkeyc -f monkey.jungle -d vivoactive4s -o bin/verses-kor-4s.prg -y "$KEY_PATH" -w && \
-echo "✅ Korean Watchface: bin/verses-kor-4s.prg"
+echo "Building Korean version (vivoactive4 default)..."
+monkeyc -f monkey.jungle -d vivoactive4 -o bin/verses-kor-vivoactive4.prg -y "$KEY_PATH" -w && \
+cp -f bin/verses-kor-vivoactive4.prg bin/verses-kor.prg && \
+echo "✅ Korean Watchface: bin/verses-kor-vivoactive4.prg (alias: bin/verses-kor.prg)"
 
 echo ""
 echo "Building Korean Widget..."
-monkeyc -f widget-kor.jungle -d vivoactive4s -o bin/verses-widget-kor.prg -y "$KEY_PATH" -w && \
-echo "✅ Korean Widget: bin/verses-widget-kor.prg"
+monkeyc -f widget-kor.jungle -d vivoactive4 -o bin/verses-widget-kor-vivoactive4.prg -y "$KEY_PATH" -w && \
+cp -f bin/verses-widget-kor-vivoactive4.prg bin/verses-widget-kor.prg && \
+echo "✅ Korean Widget: bin/verses-widget-kor-vivoactive4.prg (alias: bin/verses-widget-kor.prg)"
+
+echo ""
+echo "For ALL supported devices (fenix, epix, venu*, fr*, vivoactive5, etc.):"
+echo "  ./build-all.sh \"$KEY_PATH\""
+echo "  (see build-all.sh and the <iq:products> in manifest-kor.xml)"
 
 echo ""
 echo "=========================================="
@@ -61,8 +58,8 @@ echo "Build successful! Ready to sideload."
 echo "=========================================="
 echo ""
 echo "Next steps:"
-echo "1. Connect vivoactive4/4s via USB"
-echo "2. Use Garmin BaseCamp to import bin/verses-face-4s.prg"
+echo "1. Connect watch via USB"
+echo "2. Use Garmin BaseCamp to import bin/verses-kor.prg"
 echo "   OR manually copy to: GARMIN/APPS/3f4362d960df42419ab01640cdf6788c/"
 echo ""
 echo "Testing on watch:"

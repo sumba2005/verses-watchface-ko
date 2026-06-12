@@ -22,30 +22,26 @@ echo ""
 # Ensure bin directory exists
 mkdir -p bin
 
-# Build English version
-echo "Building English version (verses-face-4s.prg)..."
-$MONKEYC -f eng.jungle -d vivoactive4s -o bin/verses-face-4s.prg -l || {
+
+# Build Korean version (quick single-device for the common vivoactive4 target)
+echo "Building Korean version (verses-kor-vivoactive4.prg)..."
+$MONKEYC -f monkey.jungle -d vivoactive4 -o bin/verses-kor-vivoactive4.prg -w -y developer_key || {
     echo "Build failed. Check for errors above."
     exit 1
 }
+cp -f bin/verses-kor-vivoactive4.prg bin/verses-kor.prg
 
-echo "✅ English build complete: bin/verses-face-4s.prg"
+echo "✅ Korean build complete: bin/verses-kor-vivoactive4.prg (alias: bin/verses-kor.prg)"
 echo ""
-
-# Build Korean version
-echo "Building Korean version (verses-kor-4s.prg)..."
-$MONKEYC -f monkey.jungle -d vivoactive4s -o bin/verses-kor-4s.prg -l || {
-    echo "Build failed. Check for errors above."
-    exit 1
-}
-
-echo "✅ Korean build complete: bin/verses-kor-4s.prg"
+echo "To build .prg files for *all* supported Garmin watches (30+ devices):"
+echo "  ./build-all.sh developer_key"
+echo "  (devices come from <iq:products> in manifest-kor.xml + manifest-widget-kor.xml)"
 echo ""
 echo "======================================"
 echo "Build successful! Ready to sideload."
 echo "======================================"
 echo ""
 echo "Next steps:"
-echo "1. Connect vivoactive4/4s via USB"
-echo "2. See SIDELOAD.md for installation options"
+echo "1. Connect your Garmin watch via USB"
+echo "2. See SIDELOAD.md or run: ./tools/sideload.sh kor"
 echo ""

@@ -10,3 +10,14 @@
 project.manifest = manifest-kor.xml
 base.sourcePath = source/VersesFaceApp.mc;source/VersesFaceView.mc
 base.resourcePath = resources;resources_kor
+
+# === Font size variants by screen capability ===
+#
+# Default (resources_kor/fonts): 20pt verse / 17pt ref  — tuned for typical 240-280px watches.
+# Small override (resources_kor-vivoactive4s): 12pt — for tiny screens (auto via device folder).
+#
+# Large (resources_kor-large): 30pt verse (~50% bigger) / 25pt ref.
+# Use on higher-resolution / physically larger watches that would otherwise display
+# 9–12+ tiny lines. With the 50% larger font we target a comfortable ~6 lines of verse.
+#
+# These devices get the large font via explicit resourcePath (large first so it wins).
