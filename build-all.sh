@@ -1,21 +1,21 @@
 #!/bin/bash
-# Build PRGs for all devices declared in the manifest(s) — with parallel job support.
+# Build PRGs for all devices declared in the manifest(s).
 #
 # Usage:
-#   ./build-all.sh [developer_key_path] [parallel_jobs]
+#   ./build-all.sh [developer_key_path]
 #
 # If no key given, falls back to ./developer_key (common in this repo).
-# parallel_jobs defaults to 4 (can be any positive number or 0 for unlimited).
 # Builds both the Korean watchface (monkey.jungle) and widget (widget-kor.jungle)
 # for every <iq:product> listed in the manifests.
 #
 # Output: bin/verses-kor-<product>.prg   and   bin/verses-widget-kor-<product>.prg
+#
+# After building you can use Garmin Express / BaseCamp / Connect Mobile
+# or the tools/sideload.sh script.
 
 set -e
 
 KEY="${1:-developer_key}"
-PARALLEL_JOBS="${2:-4}"
-
 if [ ! -f "$KEY" ]; then
     echo "ERROR: developer key not found: $KEY"
     echo "Pass it as first arg or place a 'developer_key' file in the project root."
@@ -39,9 +39,8 @@ if [ -z "$MONKEYC" ] || [ ! -x "$MONKEYC" ]; then
     exit 1
 fi
 
-echo "Using monkeyc    : $MONKEYC"
-echo "Using key        : $KEY"
-echo "Parallel jobs    : $PARALLEL_JOBS"
+echo "Using monkeyc: $MONKEYC"
+echo "Using key     : $KEY"
 echo ""
 
 mkdir -p bin
@@ -60,104 +59,54 @@ if [ -z "$WF_PRODUCTS" ] && [ -z "$WD_PRODUCTS" ]; then
     exit 1
 fi
 
-echo "Watchface devices: $(echo $WF_PRODUCTS | wc -w)"
-echo "Widget devices:    $(echo $WD_PRODUCTS | wc -w)"
+echo "Watchface devices:"
+for d in $WF_PRODUCTS; do echo "  - $d"; done
+echo ""
+echo "Widget devices:"
+for d in $WD_PRODUCTS; do echo "  - $d"; done
 echo ""
 
 FAILED=""
 SUCCEEDED=""
-BUILD_LOG_DIR=$(mktemp -d)
-trap "rm -rf $BUILD_LOG_DIR" EXIT
 
 build_one() {
     local kind="$1"      # face or widget
     local jungle="$2"
-    local prefix="$3"    # verses-kor or verses-widget-kor
-    local dev="$4"
+    local manifest="$3"
+    local prefix="$4"    # verses-kor or verses-widget-kor
+    local dev="$5"
 
     local target="${prefix}-${dev}"
     if [ -f failed_target.txt ] && grep -qxF "$target" failed_target.txt; then
-        echo "SKIP" > "$BUILD_LOG_DIR/${prefix}-${dev}.status"
+        echo ">>> Skipping failed target $target"
+        echo ""
         return 0
     fi
 
     local out="bin/${prefix}-${dev}.prg"
-    local logfile="$BUILD_LOG_DIR/${prefix}-${dev}.log"
+    echo ">>> Building $kind for $dev -> $out"
 
-    if $MONKEYC -f "$jungle" -d "$dev" -o "$out" -w -y "$KEY" > "$logfile" 2>&1; then
-        echo "OK" > "$BUILD_LOG_DIR/${prefix}-${dev}.status"
+    if $MONKEYC -f "$jungle" -d "$dev" -o "$out" -w -y "$KEY"; then
+        echo "    ✅ $out"
+        SUCCEEDED="$SUCCEEDED $out"
     else
-        echo "FAIL" > "$BUILD_LOG_DIR/${prefix}-${dev}.status"
-        cat "$logfile" >> "$BUILD_LOG_DIR/${prefix}-${dev}.error"
+        echo "    ❌ FAILED for $dev"
+        FAILED="$FAILED $dev($kind)"
     fi
+    echo ""
 }
 
-run_parallel_builds() {
-    local kind="$1"      # face or widget
-    local jungle="$2"
-    local prefix="$3"    # verses-kor or verses-widget-kor
-    local devices="$4"
+echo "=== Building Watchfaces ==="
+for dev in $WF_PRODUCTS; do
+    build_one "watchface" "monkey.jungle" "manifest-kor.xml" "verses-kor" "$dev"
+done
 
-    local total=$(echo "$devices" | wc -w)
-    local completed=0
-    echo "=== Building $kind ($total devices) ==="
-    local job_count=0
-    local pids=()
-    local dev_list=($devices)
-
-    for i in "${!dev_list[@]}"; do
-        local dev="${dev_list[$i]}"
-        local remaining=$((total - i - 1))
-
-        # Wait if we've reached max parallel jobs
-        if [ "$PARALLEL_JOBS" -gt 0 ] && [ $job_count -ge "$PARALLEL_JOBS" ]; then
-            wait ${pids[0]}
-            pids=("${pids[@]:1}")
-            job_count=$((job_count - 1))
-        fi
-
-        # Launch build in background
-        build_one "$kind" "$jungle" "$prefix" "$dev" &
-        pids+=($!)
-        job_count=$((job_count + 1))
-        echo "  ⏳ $dev [$((i+1))/$total, $remaining left]"
-    done
-
-    # Wait for remaining jobs
-    for pid in "${pids[@]}"; do
-        wait $pid
-    done
-
-    # Report results
-    local phase_succeeded=""
-    local phase_failed=""
-    for dev in $devices; do
-        local status=$(cat "$BUILD_LOG_DIR/${prefix}-${dev}.status" 2>/dev/null || echo "UNKNOWN")
-        case "$status" in
-            OK)
-                echo "    ✅ bin/${prefix}-${dev}.prg"
-                phase_succeeded="$phase_succeeded bin/${prefix}-${dev}.prg"
-                ;;
-            FAIL)
-                echo "    ❌ ${prefix}-${dev}"
-                phase_failed="$phase_failed $dev($kind)"
-                ;;
-            SKIP)
-                echo "    ⊘ ${prefix}-${dev} (skipped)"
-                ;;
-        esac
-    done
-
-    SUCCEEDED="$SUCCEEDED$phase_succeeded"
-    FAILED="$FAILED$phase_failed"
-}
-
-run_parallel_builds "Watchface" "monkey.jungle" "verses-kor" "$WF_PRODUCTS"
-echo ""
-run_parallel_builds "Widget" "widget-kor.jungle" "verses-widget-kor" "$WD_PRODUCTS"
+echo "=== Building Widgets ==="
+for dev in $WD_PRODUCTS; do
+    build_one "widget" "widget-kor.jungle" "manifest-widget-kor.xml" "verses-widget-kor" "$dev"
+done
 
 # Convenience aliases for the most common device
-echo ""
 if [ -f bin/verses-kor-vivoactive4.prg ]; then
     cp -f bin/verses-kor-vivoactive4.prg bin/verses-kor.prg
     echo "Created alias: bin/verses-kor.prg"
@@ -170,11 +119,9 @@ fi
 echo ""
 echo "========================================"
 echo "Build run complete."
-if [ -n "$SUCCEEDED" ]; then
-    echo "Succeeded: $(echo $SUCCEEDED | wc -w) PRGs"
-fi
+echo "Succeeded:${SUCCEEDED}"
 if [ -n "$FAILED" ]; then
-    echo "Failed:   $FAILED"
+    echo "Failed:   ${FAILED}"
     exit 1
 fi
 echo "All PRGs are in bin/ ready for sideloading."
