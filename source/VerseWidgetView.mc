@@ -149,6 +149,13 @@ class VerseWidgetView extends WatchUi.View {
         }
     }
 
+    function previousPage() {
+        if (_pageCount > 1) {
+            _currentPage = (_currentPage - 1 + _pageCount) % _pageCount;
+            WatchUi.requestUpdate();
+        }
+    }
+
     private function wrapText(dc, text, font, maxW) {
         var lines = [];
         var words = splitWords(text);

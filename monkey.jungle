@@ -25,7 +25,7 @@ base.resourcePath = resources;resources_kor
 largeResources = resources;resources_kor-large;resources_kor
 
 approachs50.resourcePath = $(largeResources)
-approachs7042mm.resourcePath = $(largeResources)
+approachs7042mm.resourcePath = resources-approachs7042mm;$(largeResources)
 approachs7047mm.resourcePath = $(largeResources)
 d2air.resourcePath = $(largeResources)
 d2airx10.resourcePath = $(largeResources)
