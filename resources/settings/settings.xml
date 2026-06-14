@@ -27,7 +27,6 @@
         <settingConfig type="list">
             <listEntry value="0">@Strings.IntervalDaily</listEntry>
             <listEntry value="1">@Strings.IntervalHourly</listEntry>
-            <listEntry value="2">@Strings.IntervalFixed</listEntry>
         </settingConfig>
     </setting>
 </settings>

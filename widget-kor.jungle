@@ -3,6 +3,6 @@
 
 project.manifest = manifest-widget-kor.xml
 base.sourcePath = source/VerseWidgetApp.mc;source/VerseWidgetView.mc;source/VerseWidgetDelegate.mc
-base.resourcePath = resources;resources_kor
+base.resourcePath = resources-widget;resources;resources_kor
 
 

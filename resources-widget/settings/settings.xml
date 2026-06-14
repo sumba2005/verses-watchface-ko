@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+    <setting propertyKey="@Properties.VerseInterval" title="@Strings.SetInterval">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.IntervalDaily</listEntry>
+            <listEntry value="1">@Strings.IntervalHourly</listEntry>
+        </settingConfig>
+    </setting>
+</settings>
