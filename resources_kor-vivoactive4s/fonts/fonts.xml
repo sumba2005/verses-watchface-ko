@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <font id="VerseFont" filename="verse.fnt"/>
+    <font id="RefFont" filename="ref.fnt"/>
+</resources>

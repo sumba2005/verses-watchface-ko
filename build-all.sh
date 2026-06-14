@@ -45,19 +45,17 @@ echo ""
 
 mkdir -p bin
 
-# Extract product ids from supported_watch_list.md
-if [ ! -f supported_watch_list.md ]; then
-    echo "ERROR: supported_watch_list.md not found"
+# Extract product ids from the manifests
+if [ ! -f manifest-kor.xml ] || [ ! -f manifest-widget-kor.xml ]; then
+    echo "ERROR: manifest files not found"
     exit 1
 fi
 
-WF_PRODUCTS=$(awk '/Watchfaces/{found=1; next} found && /^---/{exit} found' supported_watch_list.md \
-    | grep '^|' | grep -oP '(?<=`)[^`]+(?=`)' | tr '\n' ' ')
-WD_PRODUCTS=$(awk '/Widgets/{found=1; next} found' supported_watch_list.md \
-    | grep '^|' | grep -oP '(?<=`)[^`]+(?=`)' | tr '\n' ' ')
+WF_PRODUCTS=$(grep -o '<iq:product[^>]*id="[^"]*"' manifest-kor.xml | grep -o 'id="[^"]*"' | sed 's/id="//;s/"//' | tr '\n' ' ')
+WD_PRODUCTS=$(grep -o '<iq:product[^>]*id="[^"]*"' manifest-widget-kor.xml | grep -o 'id="[^"]*"' | sed 's/id="//;s/"//' | tr '\n' ' ')
 
 if [ -z "$WF_PRODUCTS" ] && [ -z "$WD_PRODUCTS" ]; then
-    echo "ERROR: could not parse any device IDs from supported_watch_list.md"
+    echo "ERROR: could not parse any <iq:product> from manifests"
     exit 1
 fi
 
@@ -78,6 +76,13 @@ build_one() {
     local prefix="$4"    # verses-kor or verses-widget-kor
     local dev="$5"
 
+    local target="${prefix}-${dev}"
+    if [ -f failed_target.txt ] && grep -qxF "$target" failed_target.txt; then
+        echo ">>> Skipping failed target $target"
+        echo ""
+        return 0
+    fi
+
     local out="bin/${prefix}-${dev}.prg"
     echo ">>> Building $kind for $dev -> $out"
 
@@ -96,10 +101,19 @@ for dev in $WF_PRODUCTS; do
     build_one "watchface" "monkey.jungle" "manifest-kor.xml" "verses-kor" "$dev"
 done
 
-# Convenience alias for the most common device
+echo "=== Building Widgets ==="
+for dev in $WD_PRODUCTS; do
+    build_one "widget" "widget-kor.jungle" "manifest-widget-kor.xml" "verses-widget-kor" "$dev"
+done
+
+# Convenience aliases for the most common device
 if [ -f bin/verses-kor-vivoactive4.prg ]; then
     cp -f bin/verses-kor-vivoactive4.prg bin/verses-kor.prg
     echo "Created alias: bin/verses-kor.prg"
+fi
+if [ -f bin/verses-widget-kor-vivoactive4.prg ]; then
+    cp -f bin/verses-widget-kor-vivoactive4.prg bin/verses-widget-kor.prg
+    echo "Created alias: bin/verses-widget-kor.prg"
 fi
 
 echo ""

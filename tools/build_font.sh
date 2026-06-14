@@ -23,7 +23,7 @@ LANG="${1:-kor}"                              # language code: matches verses-<l
 # Sensible default TTF per language; override with TTF=/path/to.ttf
 DEFAULT_TTF="tools/NotoSansKR-Regular.otf"
 TTF="${TTF:-$DEFAULT_TTF}"
-SIZE="${SIZE:-20}"                            # point size; tune so all verses fit one screen
+SIZE="${SIZE:-22}"                            # point size; tune so all verses fit one screen
 GLYPHS="tools/glyphs-$LANG.txt"
 OUT_DIR="${OUT_DIR:-resources_${LANG}/fonts}"
 OUT="$OUT_DIR/verse"
@@ -47,14 +47,15 @@ if [ "$SIZE" -eq 12 ]; then
     REF_SIZE="${REF_SIZE:-12}"
 elif [ "$SIZE" -ge 28 ]; then
     # Large fonts (e.g. 30pt for high-res watches) often need bigger texture or multiple pages.
-    REF_SIZE="${REF_SIZE:-25}"
+    REF_SIZE="${REF_SIZE:-27}"
 else
-    REF_SIZE="${REF_SIZE:-17}"
+    REF_SIZE="${REF_SIZE:-19}"
 fi
 
-TEXTURE_SIZE="${TEXTURE_SIZE:-512x512}"
 if [ "$SIZE" -ge 28 ]; then
     TEXTURE_SIZE="${TEXTURE_SIZE:-1024x1024}"
+else
+    TEXTURE_SIZE="${TEXTURE_SIZE:-512x512}"
 fi
 
 echo "Building verse font (size $SIZE, texture $TEXTURE_SIZE)..."
@@ -98,7 +99,7 @@ Next:
      output into resources-$LANG-vivoactive4s/fonts/ (device qualifier override).
   3) For high-resolution/large-screen watches (epix2, fenix7x, fr965, venu3, fenix847mm etc.),
      build the 50% larger font once with:
-       SIZE=30 REF_SIZE=25 OUT_DIR=resources_${LANG}-large/fonts ./tools/build_font.sh $LANG
+       SIZE=32 REF_SIZE=27 OUT_DIR=resources_${LANG}-large/fonts ./tools/build_font.sh $LANG
      Then map those devices in monkey.jungle so they pick resources_kor-large first.
   4) Rebuild the .prg (monkeyc -f monkey.jungle -d <device> ...) and test that the target
      line count is reasonable (~6 lines on large font, more on default).

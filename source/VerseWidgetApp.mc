@@ -1,6 +1,7 @@
 using Toybox.Application;
 using Toybox.WatchUi;
 
+(:glance)
 class VerseWidgetApp extends Application.AppBase {
 
     function initialize() {

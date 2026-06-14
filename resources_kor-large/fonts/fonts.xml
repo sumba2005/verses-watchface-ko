@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- High-res large 32pt verse / 27pt ref font. -->
+    <font id="VerseFont" filename="verse.fnt"/>
+    <font id="RefFont" filename="ref.fnt"/>
+</resources>

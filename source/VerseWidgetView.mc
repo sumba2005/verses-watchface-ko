@@ -2,13 +2,11 @@ using Toybox.WatchUi;
 using Toybox.Graphics;
 using Toybox.System;
 using Toybox.Time;
+using Toybox.Application;
 
 class VerseWidgetView extends WatchUi.View {
 
-    private const LINE_GAP = 2;
-
-    private var _font;
-    private var _refFont;
+    private const LINE_GAP = 4;
     private var _ref = "";
     private var _verse = "";
     private var _lines = [];
@@ -16,16 +14,19 @@ class VerseWidgetView extends WatchUi.View {
     // Pagination state
     private var _currentPage = 0;
     private var _pageCount = 1;
-    private var _linesPerPage = 3;
+    private var _linesPerPage = 4;
 
     function initialize() {
         View.initialize();
+        loadCurrentVerse();  // Load immediately
     }
 
-    function onLayout(dc) {
-        _font = WatchUi.loadResource(Rez.Fonts.VerseFont);
-        _refFont = WatchUi.loadResource(Rez.Fonts.RefFont);
-        loadCurrentVerse();
+    function onShow() {
+        if (_verse.length() == 0 || _ref.length() == 0) {
+            loadCurrentVerse();
+        }
+        _currentPage = 0;
+        WatchUi.requestUpdate();
     }
 
     private function getProp(key, def) {
@@ -64,7 +65,7 @@ class VerseWidgetView extends WatchUi.View {
             }
         } catch (ex) {
             _ref = "Error";
-            _verse = "Failed to load verse data.";
+            _verse = "Failed to load verse.";
         }
     }
 
@@ -72,153 +73,125 @@ class VerseWidgetView extends WatchUi.View {
         var w = dc.getWidth();
         var h = dc.getHeight();
 
+        if (_verse.length() == 0 || _ref.length() == 0) {
+            loadCurrentVerse();
+        }
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.clear();
 
-        // Calculate line heights and spacing
-        var fontH = dc.getFontHeight(_font);
-        var pageLineH = fontH + LINE_GAP;
+        var verseFont = Graphics.FONT_SYSTEM_MEDIUM;
+        var refFont = Graphics.FONT_SYSTEM_SMALL;
+        var fontH = dc.getFontHeight(verseFont);
+        var lineH = fontH + LINE_GAP;
         
-        // Wrap text based on screen width
-        var maxW = w - 40;
-        if (_verse.length() > 50) {
-            _lines = wrapCharacter(dc, _verse, _font, maxW);
-        } else {
-            _lines = wrapWords(dc, _verse, _font, maxW);
-        }
+        var maxW = w - 30;
+        _lines = wrapText(dc, _verse, verseFont, maxW);
 
-        // Calculate pagination parameters
-        var regionTop = 35;
-        var regionBot = h - 35;
+        var regionTop = 20;
+        var regionBot = h - 38;
         var regionH = regionBot - regionTop;
-        _linesPerPage = (regionH / pageLineH).toNumber();
-        if (_linesPerPage < 1) { _linesPerPage = 1; }
-
+        _linesPerPage = (regionH / lineH).toNumber();
+        if (_linesPerPage < 2) {
+            _linesPerPage = 2;
+        }
+        
         _pageCount = ((_lines.size() + _linesPerPage - 1) / _linesPerPage).toNumber();
-        if (_pageCount < 1) { _pageCount = 1; }
-        if (_currentPage >= _pageCount) { _currentPage = 0; }
+        if (_pageCount < 1) {
+            _pageCount = 1;
+        }
+        if (_currentPage >= _pageCount) {
+            _currentPage = 0;
+        }
 
         var startLine = _currentPage * _linesPerPage;
         var endLine = startLine + _linesPerPage;
-        if (endLine > _lines.size()) { endLine = _lines.size(); }
+        if (endLine > _lines.size()) {
+            endLine = _lines.size();
+        }
 
-        // Draw page dots if multi-page
         if (_pageCount > 1) {
-            drawDots(dc, w, 20);
+            drawDots(dc, w, 8);
         }
 
-        // Draw verse text
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        var bodyH = (endLine - startLine) * pageLineH;
-        var y = regionTop + ((regionH - bodyH) / 2);
+        var y = regionTop + ((regionH - (endLine - startLine) * lineH) / 2);
         for (var i = startLine; i < endLine; i++) {
-            dc.drawText(w / 2, y, _font, _lines[i], Graphics.TEXT_JUSTIFY_CENTER);
-            y += pageLineH;
+            dc.drawText(w / 2, y, verseFont, _lines[i], Graphics.TEXT_JUSTIFY_CENTER);
+            y += lineH;
         }
 
-        // Draw reference at the bottom (book name in red, chapter:verse in accent)
-        var spaceIdx = -1;
-        for (var i = _ref.length() - 1; i >= 0; i--) {
-            if (_ref.substring(i, i + 1).equals(" ")) {
-                spaceIdx = i;
-                break;
-            }
-        }
-        if (spaceIdx == -1) {
-            dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(w / 2, h - 25, _refFont, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        } else {
-            var bookName = _ref.substring(0, spaceIdx);
-            var chapterVerse = _ref.substring(spaceIdx + 1, _ref.length());
-            
-            var bookW = dc.getTextWidthInPixels(bookName, _refFont);
-            var spaceW = dc.getTextWidthInPixels(" ", _refFont);
-            var cvW = dc.getTextWidthInPixels(chapterVerse, _refFont);
-            var totalW = bookW + spaceW + cvW;
-
-            var startX = (w - totalW) / 2;
-            var yY = h - 25;
-
-            dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT); // Red
-            dc.drawText(startX + (bookW / 2), yY, _refFont, bookName, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-            dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT); // Red
-            dc.drawText(startX + bookW + spaceW + (cvW / 2), yY, _refFont, chapterVerse, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        }
+        dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(w / 2, h - 18, refFont, _ref, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
     private function drawDots(dc, w, dotY) {
-        var dotRadius = 3;
-        var spacing = 12;
-        var totalWidth = (_pageCount - 1) * spacing;
-        var startX = w / 2 - (totalWidth / 2);
-
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        var r = 2;
+        var spacing = 9;
+        var totalW = (_pageCount - 1) * spacing;
+        var x = (w - totalW) / 2;
+        
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         for (var i = 0; i < _pageCount; i++) {
-            var x = startX + (i * spacing);
             if (i == _currentPage) {
-                dc.fillCircle(x, dotY, dotRadius);
+                dc.fillCircle(x, dotY, r + 1);
             } else {
-                dc.drawCircle(x, dotY, dotRadius);
+                dc.drawCircle(x, dotY, r);
             }
+            x += spacing;
         }
     }
 
     function nextPage() {
         if (_pageCount > 1) {
             _currentPage = (_currentPage + 1) % _pageCount;
+            WatchUi.requestUpdate();
         }
     }
 
-    // Word wrapping functions (copied from watchface for consistency)
-    private function wrapWords(dc, text, font, maxW) {
+    private function wrapText(dc, text, font, maxW) {
         var lines = [];
-        var words = splitSpaces(text);
-        var cur = "";
+        var words = splitWords(text);
+        var current = "";
+        
         for (var i = 0; i < words.size(); i++) {
             var word = words[i];
-            var test = (cur.length() == 0) ? word : cur + " " + word;
-            if (dc.getTextWidthInPixels(test, font) <= maxW) {
-                cur = test;
+            var testLine = current.length() == 0 ? word : current + " " + word;
+            if (dc.getTextWidthInPixels(testLine, font) <= maxW) {
+                current = testLine;
             } else {
-                if (cur.length() > 0) { lines.add(cur); cur = ""; }
-                cur = word;
+                if (current.length() > 0) {
+                    lines.add(current);
+                    current = word;
+                } else {
+                    lines.add(word);
+                }
             }
         }
-        if (cur.length() > 0) { lines.add(cur); }
+        if (current.length() > 0) {
+            lines.add(current);
+        }
         return lines;
     }
 
-    private function wrapCharacter(dc, text, font, maxW) {
-        var lines = [];
-        var cur = "";
-        for (var i = 0; i < text.length(); i++) {
-            var ch = text.substring(i, i + 1);
-            var test = cur + ch;
-            if (dc.getTextWidthInPixels(test, font) <= maxW) {
-                cur = test;
-            } else {
-                if (cur.length() > 0) { lines.add(cur); }
-                cur = ch;
-            }
-        }
-        if (cur.length() > 0) { lines.add(cur); }
-        return lines;
-    }
-
-    private function splitSpaces(text) {
-        var out = [];
-        var cur = "";
+    private function splitWords(text) {
+        var result = [];
+        var word = "";
         for (var i = 0; i < text.length(); i++) {
             var ch = text.substring(i, i + 1);
             if (ch.equals(" ")) {
-                if (cur.length() > 0) { out.add(cur); cur = ""; }
+                if (word.length() > 0) {
+                    result.add(word);
+                    word = "";
+                }
             } else {
-                cur += ch;
+                word += ch;
             }
         }
-        if (cur.length() > 0) { out.add(cur); }
-        return out;
+        if (word.length() > 0) {
+            result.add(word);
+        }
+        return result;
     }
 
     private function loadChunk(chunkId) {
@@ -234,5 +207,4 @@ class VerseWidgetView extends WatchUi.View {
         if (chunkId == 9) { return WatchUi.loadResource(Rez.JsonData.verses_9); }
         return null;
     }
-
 }

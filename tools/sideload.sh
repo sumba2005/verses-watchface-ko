@@ -25,12 +25,33 @@ pick_src() {  # $1 = full GarminDevice.xml contents (or model text)
         file_lang="face"
     fi
 
+    # Try matching direct ModelName or Description from GarminDevice.xml
+    local model_name=""
+    model_name=$(echo "$xml_or_model" | grep -oP '(?<=<ModelName>)[^<]+' | head -1 | tr '[:upper:]' '[:lower:]' | tr -d ' \t\r\n_-' || true)
+    if [ -z "$model_name" ]; then
+        model_name=$(echo "$xml_or_model" | grep -oP '(?<=<Description>)[^<]+' | head -1 | tr '[:upper:]' '[:lower:]' | tr -d ' \t\r\n_-' || true)
+    fi
+
+    if [ -n "$model_name" ]; then
+        # Check direct model suffix candidate
+        local candidate="$PROJ/bin/verses-$file_lang-$model_name.prg"
+        if [ -f "$candidate" ]; then
+            echo "$candidate"
+            return 0
+        fi
+        # Check vivoactive+suffix candidate (e.g. if XML says '4' but file is 'vivoactive4')
+        local candidate_va="$PROJ/bin/verses-$file_lang-vivoactive$model_name.prg"
+        if [ -f "$candidate_va" ]; then
+            echo "$candidate_va"
+            return 0
+        fi
+    fi
+
     # Build a candidate list of device suffixes we know how to build (from bin/ + common aliases)
     # We prefer the most specific match that actually exists on disk.
     local candidates=()
 
     # 1. Direct model hints from the XML (product ids and human names)
-    # Common patterns seen in GarminDevice.xml: ModelName, DeviceName, or just the text
     local hints
     hints=$(echo "$xml_or_model" | tr '[:upper:]' '[:lower:]' | grep -oE '(vivoactive ?[0-9s]*|venu ?[0-9s]*|fenix ?[0-9sxpro]*|epix ?[0-9pro]*|fr ?[0-9]+s?|venusq ?[0-9m]*|forerunner ?[0-9]+s?|instinct ?[0-9sx]*)' | tr -d ' ' | sort -u || true)
 
@@ -102,21 +123,95 @@ pick_src() {  # $1 = full GarminDevice.xml contents (or model text)
     echo "$PROJ/bin/verses-$file_lang.prg"
 }
 
-pick_widget() {
-    # Widgets are much smaller and the same binary usually works across devices,
-    # but we now produce per-device ones too. Try device-specific first using same hints.
+pick_widget() {  # $1 = full GarminDevice.xml contents (or model text)
+    local xml_or_model="$1"
     local wlang="$LANG"
-    # Re-use pick_src logic by calling it with a fake but the caller already has the XML in scope in practice.
-    # Simpler: look for a suffixed widget that matches any built file, falling back to the alias.
-    for suf in vivoactive5 fenix7 fenix6 venu3 venu2 fr965 fr955; do
-        local p="$PROJ/bin/verses-widget-$wlang-$suf.prg"
-        [ -f "$p" ] && { echo "$p"; return 0; }
+
+    # Try matching direct ModelName or Description from GarminDevice.xml
+    local model_name=""
+    model_name=$(echo "$xml_or_model" | grep -oP '(?<=<ModelName>)[^<]+' | head -1 | tr '[:upper:]' '[:lower:]' | tr -d ' \t\r\n_-' || true)
+    if [ -z "$model_name" ]; then
+        model_name=$(echo "$xml_or_model" | grep -oP '(?<=<Description>)[^<]+' | head -1 | tr '[:upper:]' '[:lower:]' | tr -d ' \t\r\n_-' || true)
+    fi
+
+    if [ -n "$model_name" ]; then
+        # Check direct model suffix candidate
+        local candidate="$PROJ/bin/verses-widget-$wlang-$model_name.prg"
+        if [ -f "$candidate" ]; then
+            echo "$candidate"
+            return 0
+        fi
+        # Check vivoactive+suffix candidate
+        local candidate_va="$PROJ/bin/verses-widget-$wlang-vivoactive$model_name.prg"
+        if [ -f "$candidate_va" ]; then
+            echo "$candidate_va"
+            return 0
+        fi
+    fi
+
+    # Fallback candidates using the same regex mapping
+    local candidates=()
+    local hints
+    hints=$(echo "$xml_or_model" | tr '[:upper:]' '[:lower:]' | grep -oE '(vivoactive ?[0-9s]*|venu ?[0-9s]*|fenix ?[0-9sxpro]*|epix ?[0-9pro]*|fr ?[0-9]+s?|venusq ?[0-9m]*|forerunner ?[0-9]+s?|instinct ?[0-9sx]*)' | tr -d ' ' | sort -u || true)
+
+    for h in $hints; do
+        case "$h" in
+            vivoactive4|va4)               candidates+=("vivoactive4") ;;
+            vivoactive5|va5)               candidates+=("vivoactive5") ;;
+            venu3s)                        candidates+=("venu3s") ;;
+            venu3)                         candidates+=("venu3") ;;
+            venu2s)                        candidates+=("venu2s") ;;
+            venu2)                         candidates+=("venu2") ;;
+            venu)                          candidates+=("venu") ;;
+            fenix7xpro|fenix7x)            candidates+=("fenix7xpro" "fenix7x") ;;
+            fenix7spro|fenix7s)            candidates+=("fenix7spro" "fenix7s") ;;
+            fenix7pro|fenix7)              candidates+=("fenix7pro" "fenix7") ;;
+            fenix6xpro)                    candidates+=("fenix6xpro") ;;
+            fenix6spro|fenix6s)            candidates+=("fenix6spro" "fenix6s") ;;
+            fenix6pro|fenix6)              candidates+=("fenix6pro" "fenix6") ;;
+            fenix843mm|fenix8_43)          candidates+=("fenix843mm") ;;
+            fenix847mm|fenix8_47)          candidates+=("fenix847mm") ;;
+            epix2pro47|epix2pro)           candidates+=("epix2pro47mm") ;;
+            epix2)                         candidates+=("epix2") ;;
+            epix)                          candidates+=("epix") ;;
+            fr965)                         candidates+=("fr965") ;;
+            fr955)                         candidates+=("fr955") ;;
+            fr265s)                        candidates+=("fr265s") ;;
+            fr265)                         candidates+=("fr265") ;;
+            fr255s)                        candidates+=("fr255s") ;;
+            venusq2m)                      candidates+=("venusq2m") ;;
+            venusq2)                       candidates+=("venusq2") ;;
+            venusq)                        candidates+=("venusq") ;;
+            instinct2s)                    candidates+=("instinct2s") ;;
+            instinct2)                     candidates+=("instinct2") ;;
+        esac
     done
+
+    # Fallback: check files present in the bin/ folder
+    for f in "$PROJ"/bin/verses-widget-$wlang-*.prg; do
+        [ -f "$f" ] || continue
+        base=$(basename "$f" .prg)
+        suf=${base#verses-widget-$wlang-}
+        [ "$suf" = "$wlang" ] && continue
+        candidates+=("$suf")
+    done
+
+    for suf in "${candidates[@]}"; do
+        for variant in "$suf" "vivoactive$suf"; do
+            local candidate="$PROJ/bin/verses-widget-$wlang-$variant.prg"
+            if [ -f "$candidate" ]; then
+                echo "$candidate"
+                return 0
+            fi
+        done
+    done
+
     # The build-all.sh creates an alias for the common case
     if [ -f "$PROJ/bin/verses-widget-$wlang.prg" ]; then
         echo "$PROJ/bin/verses-widget-$wlang.prg"
         return 0
     fi
+
     # Any widget at all
     ls "$PROJ"/bin/verses-widget-$wlang-*.prg 2>/dev/null | head -1 || echo "$PROJ/bin/verses-widget-$wlang.prg"
 }
@@ -134,7 +229,7 @@ for base in "/media/$USER" "/run/media/$USER" /media /mnt; do
         echo "✅ Mass-storage device: $d"
         echo "✅ Build: $(basename "$SRC")"
         cp "$SRC" "$APPS/$APPNAME"
-        WIDGET_SRC="$(pick_widget)"
+        WIDGET_SRC="$(pick_widget "$xml_content")"
         if [ -f "$WIDGET_SRC" ]; then
             cp "$WIDGET_SRC" "$APPS/$WIDGETNAME"
             echo "✅ Widget: $(basename "$WIDGET_SRC") -> APPS/$WIDGETNAME"
@@ -172,7 +267,7 @@ gio remove "$DEST" 2>/dev/null || true   # MTP needs delete-before-overwrite
 gio copy "$SRC" "$DEST"
 echo "✅ Installed $(stat -c%s "$SRC") bytes to APPS/$APPNAME."
 
-WIDGET_SRC="$(pick_widget)"
+WIDGET_SRC="$(pick_widget "$XML")"
 if [ -f "$WIDGET_SRC" ]; then
     WIDGET_DEST="$DEV/Primary/GARMIN/APPS/$WIDGETNAME"
     gio remove "$WIDGET_DEST" 2>/dev/null || true

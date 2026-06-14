@@ -28,22 +28,32 @@ echo "Key: $KEY_PATH"
 echo ""
 
 # Verify monkeyc is available
-if ! command -v monkeyc &> /dev/null; then
-    echo "ERROR: monkeyc not found in PATH"
-    echo "Install Connect IQ SDK: https://developer.garmin.com/downloads/connect-iq/"
+MONKEYC=$(which monkeyc 2>/dev/null || echo "")
+if [ -z "$MONKEYC" ]; then
+    for cand in \
+        "$HOME/.Garmin/ConnectIQ/Sdks/connectiq-sdk-lin-9.2.0-2026-06-09-92a1605b2/bin/monkeyc" \
+        "$HOME/.Garmin/ConnectIQ/Sdks/connectiq-sdk-lin-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" \
+        "/home/jkim/.Garmin/ConnectIQ/Sdks/connectiq-sdk-lin-9.2.0-2026-06-09-92a1605b2/bin/monkeyc"
+    do
+        if [ -x "$cand" ]; then MONKEYC="$cand"; break; fi
+    done
+fi
+
+if [ -z "$MONKEYC" ] || [ ! -x "$MONKEYC" ]; then
+    echo "ERROR: monkeyc not found. Install Connect IQ SDK or put it on PATH."
     exit 1
 fi
 
 mkdir -p bin
 
 echo "Building Korean version (vivoactive4 default)..."
-monkeyc -f monkey.jungle -d vivoactive4 -o bin/verses-kor-vivoactive4.prg -y "$KEY_PATH" -w && \
+"$MONKEYC" -f monkey.jungle -d vivoactive4 -o bin/verses-kor-vivoactive4.prg -y "$KEY_PATH" -w && \
 cp -f bin/verses-kor-vivoactive4.prg bin/verses-kor.prg && \
 echo "✅ Korean Watchface: bin/verses-kor-vivoactive4.prg (alias: bin/verses-kor.prg)"
 
 echo ""
 echo "Building Korean Widget..."
-monkeyc -f widget-kor.jungle -d vivoactive4 -o bin/verses-widget-kor-vivoactive4.prg -y "$KEY_PATH" -w && \
+"$MONKEYC" -f widget-kor.jungle -d vivoactive4 -o bin/verses-widget-kor-vivoactive4.prg -y "$KEY_PATH" -w && \
 cp -f bin/verses-widget-kor-vivoactive4.prg bin/verses-widget-kor.prg && \
 echo "✅ Korean Widget: bin/verses-widget-kor-vivoactive4.prg (alias: bin/verses-widget-kor.prg)"
 

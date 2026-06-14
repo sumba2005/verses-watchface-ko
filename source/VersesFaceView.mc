@@ -20,7 +20,6 @@ class VersesFaceView extends WatchUi.WatchFace {
     private const H_INSET_RATIO = 0.14;
     private const LINE_GAP = 1;
     private const DEBUG_INDEX = -1;
-    private const REF_RADIUS_MIN = 0.37;   // min reference radius (conservative fallback)
     private const REGION_TOP_TIGHT = 0.16; // tight region top for fallback
     private const REGION_BOT_TIGHT = 0.80; // tight region bottom for fallback
     private const PAGINATION_TIMEOUT = 10000; // milliseconds
