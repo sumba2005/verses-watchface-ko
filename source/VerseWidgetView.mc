@@ -88,17 +88,15 @@ class VerseWidgetView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.clear();
 
-        // Fall back to system font if custom font failed to load
-        var verseFont = (_font != null) ? _font : Graphics.FONT_SYSTEM_MEDIUM;
-        var refFont = (_refFont != null) ? _refFont : Graphics.FONT_SYSTEM_SMALL;
+        if (_font == null) { return; }
 
-        var fontH = dc.getFontHeight(verseFont);
+        var fontH = dc.getFontHeight(_font);
         var lineH = fontH + LINE_GAP;
 
-        var refH = dc.getFontHeight(refFont);
+        var refH = dc.getFontHeight(_refFont);
         var maxW = w - 20;
 
-        _lines = wrapText(dc, _verse, verseFont, maxW);
+        _lines = wrapText(dc, _verse, _font, maxW);
 
         var regionTop = 10;
         var regionBot = h - refH - 14;
@@ -131,12 +129,12 @@ class VerseWidgetView extends WatchUi.View {
         var y = regionTop + ((regionH - pageLines * lineH) / 2);
         if (y < regionTop) { y = regionTop; }
         for (var i = startLine; i < endLine; i++) {
-            dc.drawText(w / 2, y, verseFont, _lines[i], Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(w / 2, y, _font, _lines[i], Graphics.TEXT_JUSTIFY_CENTER);
             y += lineH;
         }
 
         dc.setColor(0xFF5555, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(w / 2, h - refH - 4, refFont, _ref,
+        dc.drawText(w / 2, h - refH - 4, _refFont, _ref,
                     Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
