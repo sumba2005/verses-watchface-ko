@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string id="AppName">말씀-Korean Bible Verses</string>
-    <string id="WidgetName">치유의 말씀</string>
-    <string id="GlanceSubtitle">오늘의 말씀</string>
+    <string id="WidgetName">말씀</string>
 
     <!-- Settings labels (rendered by Garmin Connect Mobile, not the watch font). -->
     <string id="SetTimeFormat">24시간 형식</string>

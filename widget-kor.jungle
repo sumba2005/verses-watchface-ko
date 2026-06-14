@@ -2,7 +2,7 @@
 # Compiles only widget source code and uses resources_kor.
 
 project.manifest = manifest-widget-kor.xml
-base.sourcePath = source/VerseWidgetApp.mc;source/VerseWidgetView.mc;source/VerseWidgetDelegate.mc;source/VerseWidgetGlanceView.mc
+base.sourcePath = source/VerseWidgetApp.mc;source/VerseWidgetView.mc;source/VerseWidgetDelegate.mc
 base.resourcePath = resources;resources_kor
 
 
