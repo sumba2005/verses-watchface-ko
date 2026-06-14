@@ -25,9 +25,6 @@ class VersesFaceView extends WatchUi.WatchFace {
     private const PAGINATION_TIMEOUT = 10000; // milliseconds
     private const MAX_BOOK_NAME_LEN = 12;  // limit book name to stay within 7:30 rim edge
 
-    // Adaptive layout for the large (30pt) font used on high-res watches.
-    // These watches have enough pixels that the default 20pt font would show 9-12+
-    // tiny lines; the 50% larger font targets a readable ~6 lines instead.
     private var _verseFontHeight = 0;
 
     private var _font;
