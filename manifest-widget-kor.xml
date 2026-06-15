@@ -7,12 +7,12 @@
     -->
     <iq:application
         entry="VerseWidgetApp"
-        id="fb597ee5a8d7434f857654a71a4c1ede"
+        id="8576c580d33c4687b0500e658a2be363"
         launcherIcon="@Drawables.LauncherIcon"
         minApiLevel="3.2.0"
         name="@Strings.WidgetName"
         type="widget"
-        version="1.2.2">
+        version="1.2.3">
         <iq:products>
             <iq:product id="approachs50"/>
             <iq:product id="approachs7042mm"/>
