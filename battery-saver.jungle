@@ -1,0 +1,4 @@
+# Battery saver - ultra minimal time display only (HH:MM). No verses, no settings, no extra resources.
+project.manifest = manifest-battery-saver.xml
+base.sourcePath = source/BatterySaverApp.mc;source/BatterySaverView.mc
+base.resourcePath = resources
