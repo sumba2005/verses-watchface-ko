@@ -10,9 +10,11 @@ using Toybox.Time.Gregorian;
 // - Date above time ONLY when min == 0.
 // - Battery % at top center when charging && >50%.
 //
-// Phase 1: Lazy-load time queries, cache battery stats
-// Phase 2: Dirty rectangle clearing - only redraw changed regions
-// Phase 3: Cache settings and time strings to eliminate redundant work
+// Battery notes: onUpdate runs once per minute in low-power mode, so CPU
+// work here is minor next to the display itself. We cache what is free to
+// cache (setting, stats, formatted time string), but we always do a full
+// clear + redraw: the CIQ contract does not preserve the framebuffer
+// between onUpdate calls, so partial redraws can leave stale content.
 class BatterySaverView extends WatchUi.WatchFace {
 
     private var _lastStatsTime = 0;
@@ -26,51 +28,35 @@ class BatterySaverView extends WatchUi.WatchFace {
         _use24Hour = getProp("Use24Hour", true);
     }
 
+    // Called by the app on onSettingsChanged so the cached setting and
+    // formatted time string pick up the new value without a restart.
+    function reloadSettings() {
+        _use24Hour = getProp("Use24Hour", true);
+        _lastFormattedMin = -1;
+    }
+
     function onUpdate(dc) {
         var w = dc.getWidth();
         var h = dc.getHeight();
         var clock = System.getClockTime();
 
-        // Phase 2 Optimization: Dirty rectangle clearing instead of full dc.clear()
-        // Only clear regions that will be redrawn, not entire screen
-        // This is the single largest battery optimization (10-15% gain on LCD)
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        dc.clear();
 
-        var dateY = (h * 0.28).toNumber();
-        var battY = (h * 0.12).toNumber();
-        var timeY = (clock.min == 0) ? (h * 0.48).toNumber() : (h / 2);
+        var timeY = h / 2;
 
-        // Clear time region (always updates every minute)
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.fillRectangle(0, timeY - 27, w, 54);
-
-        // Clear date region (only at top of hour)
-        if (clock.min == 0) {
-            dc.fillRectangle(0, dateY - 15, w, 30);
-        }
-
-        // Clear battery region (only when charging and displaying)
-        var now_ms = System.getTimer();
-        if (_cachedStats == null || (now_ms - _lastStatsTime) >= 300000) {
-            _cachedStats = System.getSystemStats();
-            _lastStatsTime = now_ms;
-        }
-        var stats = _cachedStats;
-        if (stats != null && stats.charging && stats.battery > 50) {
-            dc.fillRectangle(0, battY - 10, w, 20);
-        }
-
-        // Draw date (only at top of hour)
+        // Date above time ONLY when min == 0; Time.now()/Gregorian.info()
+        // are only queried in that one minute per hour.
         if (clock.min == 0) {
             var now = Time.now();
             var dateInfo = Gregorian.info(now, Time.FORMAT_SHORT);
             var dateStr = dateInfo.month.format("%d") + "/" + dateInfo.day.format("%d");
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(w / 2, dateY, Graphics.FONT_SMALL, dateStr, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(w / 2, (h * 0.28).toNumber(), Graphics.FONT_SMALL, dateStr, Graphics.TEXT_JUSTIFY_CENTER);
+            timeY = (h * 0.48).toNumber();
         }
 
-        // Phase 3 Optimization: Cache time string - only format when minute changes
-        // Previously: String allocated and formatted every 60 seconds
-        // Now: Only format when minute actually changes (eliminates 1,440 allocations/day)
+        // Time string is only reformatted when the minute changes.
         if (clock.min != _lastFormattedMin) {
             _lastFormattedMin = clock.min;
             if (_use24Hour) {
@@ -85,11 +71,22 @@ class BatterySaverView extends WatchUi.WatchFace {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(w / 2, timeY, Graphics.FONT_MEDIUM, _cachedTimeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // Draw battery (only when charging and >50%)
-        if (stats != null && stats.charging && stats.battery > 50) {
+        // Battery stats refresh every 5 minutes. getTimer() is a signed
+        // 32-bit ms counter that wraps (~25 days); a negative delta means
+        // it wrapped, so refresh then too.
+        var now_ms = System.getTimer();
+        var delta = now_ms - _lastStatsTime;
+        if (_cachedStats == null || delta >= 300000 || delta < 0) {
+            _cachedStats = System.getSystemStats();
+            _lastStatsTime = now_ms;
+        }
+        var stats = _cachedStats;
+
+        // Battery % at top center when charging && >50%
+        if (stats.charging && stats.battery > 50) {
             var battStr = stats.battery.format("%d") + "%";
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(w / 2, battY, Graphics.FONT_XTINY, battStr, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(w / 2, (h * 0.12).toNumber(), Graphics.FONT_XTINY, battStr, Graphics.TEXT_JUSTIFY_CENTER);
         }
     }
 
