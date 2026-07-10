@@ -12,22 +12,24 @@ using Toybox.Time.Gregorian;
 //
 // Phase 1: Lazy-load time queries, cache battery stats
 // Phase 2: Dirty rectangle clearing - only redraw changed regions
+// Phase 3: Cache settings and time strings to eliminate redundant work
 class BatterySaverView extends WatchUi.WatchFace {
 
     private var _lastStatsTime = 0;
     private var _cachedStats = null;
-    private var _screenW = 0;
-    private var _screenH = 0;
+    private var _use24Hour = true;
+    private var _lastFormattedMin = -1;
+    private var _cachedTimeStr = "";
 
     function initialize() {
         WatchFace.initialize();
+        _use24Hour = getProp("Use24Hour", true);
     }
 
     function onUpdate(dc) {
         var w = dc.getWidth();
         var h = dc.getHeight();
         var clock = System.getClockTime();
-        var use24 = getProp("Use24Hour", true);
 
         // Phase 2 Optimization: Dirty rectangle clearing instead of full dc.clear()
         // Only clear regions that will be redrawn, not entire screen
@@ -66,18 +68,22 @@ class BatterySaverView extends WatchUi.WatchFace {
             dc.drawText(w / 2, dateY, Graphics.FONT_SMALL, dateStr, Graphics.TEXT_JUSTIFY_CENTER);
         }
 
-        // Draw time
-        var timeStr;
-        if (use24) {
-            timeStr = clock.hour.format("%02d") + ":" + clock.min.format("%02d");
-        } else {
-            var h12 = clock.hour % 12;
-            if (h12 == 0) { h12 = 12; }
-            var ap = (clock.hour < 12) ? "AM" : "PM";
-            timeStr = h12.format("%02d") + ":" + clock.min.format("%02d") + " " + ap;
+        // Phase 3 Optimization: Cache time string - only format when minute changes
+        // Previously: String allocated and formatted every 60 seconds
+        // Now: Only format when minute actually changes (eliminates 1,440 allocations/day)
+        if (clock.min != _lastFormattedMin) {
+            _lastFormattedMin = clock.min;
+            if (_use24Hour) {
+                _cachedTimeStr = clock.hour.format("%02d") + ":" + clock.min.format("%02d");
+            } else {
+                var h12 = clock.hour % 12;
+                if (h12 == 0) { h12 = 12; }
+                var ap = (clock.hour < 12) ? "AM" : "PM";
+                _cachedTimeStr = h12.format("%02d") + ":" + clock.min.format("%02d") + " " + ap;
+            }
         }
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(w / 2, timeY, Graphics.FONT_MEDIUM, timeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, timeY, Graphics.FONT_MEDIUM, _cachedTimeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         // Draw battery (only when charging and >50%)
         if (stats != null && stats.charging && stats.battery > 50) {
