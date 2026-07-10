@@ -49,10 +49,10 @@ class BatterySaverView extends WatchUi.WatchFace {
         }
 
         // Clear battery region (only when charging and displaying)
-        var now_sec = System.getElapsedTime();
-        if (_cachedStats == null || (now_sec - _lastStatsTime) >= 300) {
+        var now_ms = System.getTimer();
+        if (_cachedStats == null || (now_ms - _lastStatsTime) >= 300000) {
             _cachedStats = System.getSystemStats();
-            _lastStatsTime = now_sec;
+            _lastStatsTime = now_ms;
         }
         var stats = _cachedStats;
         if (stats != null && stats.charging && stats.battery > 50) {
