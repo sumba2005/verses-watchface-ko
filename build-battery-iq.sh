@@ -1,11 +1,10 @@
 #!/bin/bash
-# Build a Connect IQ Store package (.iq) for the Korean widget.
+# Build a Connect IQ Store package (.iq) for the Battery Saver watchface.
 #
 # Usage:
-#   ./build-widget-iq.sh [developer_key_path]
+#   ./build-battery-iq.sh [developer_key_path]
 #
-# Output: bin/verses-widget-kor-<version>.iq  — upload this file to the Connect IQ Store.
-#
+# Output: bin/battery-saver-<version>.iq — upload this file to the Connect IQ Store.
 
 set -e
 
@@ -32,22 +31,22 @@ if [ -z "$MONKEYC" ] || [ ! -x "$MONKEYC" ]; then
     exit 1
 fi
 
-VERSION=$(python3 -c "import xml.etree.ElementTree as ET; ns={'iq':'http://www.garmin.com/xml/connectiq'}; print(ET.parse('manifest-widget-kor.xml').find('iq:application',ns).get('version'))")
-OUT="bin/verses-widget-kor-${VERSION}.iq"
+VERSION=$(python3 -c "import xml.etree.ElementTree as ET; ns={'iq':'http://www.garmin.com/xml/connectiq'}; print(ET.parse('manifest-battery-saver.xml').find('iq:application',ns).get('version'))")
+OUT="bin/battery-saver-${VERSION}.iq"
 
 echo "Using monkeyc : $MONKEYC"
 echo "Using key     : $KEY"
-echo "Widget version: $VERSION"
+echo "App version   : $VERSION"
 echo "Output        : $OUT"
 echo ""
 
 mkdir -p bin
 
-echo "Building Widget IQ package for all devices in manifest-widget-kor.xml..."
-$MONKEYC -f widget-kor.jungle --package-app -o "$OUT" -y "$KEY" -w
+echo "Building IQ package for all devices in manifest-battery-saver.xml..."
+$MONKEYC -f battery-saver.jungle --package-app -o "$OUT" -y "$KEY" -w
 
 echo ""
-echo "✅ Widget IQ package built: $OUT"
+echo "✅ Battery Saver IQ package built: $OUT"
 echo ""
 echo "Upload $OUT to the Connect IQ Store:"
 echo "  https://apps.garmin.com/developer/apps"

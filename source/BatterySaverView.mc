@@ -92,7 +92,39 @@ class BatterySaverView extends WatchUi.WatchFace {
 
     private function getProp(key, def) {
         var v = Application.Properties.getValue(key);
-        return (v == null) ? def : v;
+        if (v == null) {
+            return def;
+        }
+        if (def instanceof Toybox.Lang.Boolean) {
+            if (v instanceof Toybox.Lang.Boolean) {
+                return v;
+            } else if (v instanceof Toybox.Lang.String) {
+                var s = v.toLower();
+                if ("true".equals(s) || "1".equals(s)) {
+                    return true;
+                } else if ("false".equals(s) || "0".equals(s)) {
+                    return false;
+                }
+            } else if (v instanceof Toybox.Lang.Number) {
+                return v != 0;
+            }
+        } else if (def instanceof Toybox.Lang.Number) {
+            if (v instanceof Toybox.Lang.Number) {
+                return v;
+            } else if (v instanceof Toybox.Lang.String) {
+                var num = v.toNumber();
+                if (num != null) {
+                    return num;
+                }
+                var flt = v.toFloat();
+                if (flt != null) {
+                    return flt.toNumber();
+                }
+            } else if (v instanceof Toybox.Lang.Float || v instanceof Toybox.Lang.Double) {
+                return v.toNumber();
+            }
+        }
+        return v;
     }
 }
 

@@ -1,0 +1,1 @@
+Typical Garmin watchface battery consumption on vivoactive 4s is ~0.5-2% per day for simple time-only designs. Our ultra-minimal version (FONT_MEDIUM drawText + rare stats check) should be <1% per day or ~20-30 days on full battery assuming 10-15 day normal usage.

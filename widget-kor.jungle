@@ -1,9 +1,0 @@
-# KOREAN Widget build. `monkeyc -f widget-kor.jungle ...`
-# Compiles only widget source code and uses resources_kor.
-
-project.manifest = manifest-widget-kor.xml
-base.sourcePath = source/VerseWidgetApp.mc;source/VerseWidgetView.mc;source/VerseWidgetDelegate.mc
-base.resourcePath = resources-widget;resources;resources_kor
-
-# Approach S70 42mm has a custom launcher icon.
-approachs7042mm.resourcePath = resources-approachs7042mm;resources-widget;resources;resources_kor
